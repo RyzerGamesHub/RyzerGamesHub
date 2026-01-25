@@ -1,50 +1,9 @@
-// ======================= package.json =======================
-{
-  "name": "minicord",
-  "version": "1.0.0",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "socket.io": "^4.7.5"
-  }
-}
-
-// ======================= server.js =======================
-const express = require('express')
-const app = express()
-const http = require('http').createServer(app)
-const io = require('socket.io')(http)
-
-const users = {}
-
-app.use(express.static(__dirname))
-
-io.on('connection', socket => {
-  let user
-
-  socket.on('login', data => {
-    if (users[data.u] && users[data.u] !== data.p) {
-      socket.disconnect()
-      return
-    }
-    users[data.u] = data.p
-    user = data.u
-  })
-
-  socket.on('msg', text => {
-    if (!user) return
-    io.emit('msg', { u: user, t: text })
-  })
-})
-
-const PORT = process.env.PORT || 3000
-http.listen(PORT)
-
-// ======================= index.html =======================
 <!DOCTYPE html>
+<!--
+MINICORD – HTML-ONLY VERSION (WORKS ON GITHUB PAGES / RENDER STATIC)
+Uses Firebase Auth + Realtime Database
+NO SERVER, NO NODE
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -73,17 +32,15 @@ button{margin-left:8px;padding:10px;background:#5865f2;border:0;color:#fff;borde
 
 <div id="login" class="login">
   <div class="login-box">
-    <input id="user" placeholder="username">
-    <input id="pass" type="password" placeholder="password">
+    <input id="email" placeholder="email">
+    <input id="password" type="password" placeholder="password">
     <button onclick="login()">login / register</button>
   </div>
 </div>
 
 <div id="app" class="app hidden">
   <div class="servers"></div>
-  <div class="channels">
-    <div class="channel"># general</div>
-  </div>
+  <div class="channels"><div class="channel"># general</div></div>
   <div class="chat">
     <div id="messages" class="messages"></div>
     <div class="input">
@@ -93,32 +50,57 @@ button{margin-left:8px;padding:10px;background:#5865f2;border:0;color:#fff;borde
   </div>
 </div>
 
-<script src="/socket.io/socket.io.js"></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
-let socket, username
-const loginDiv=document.getElementById('login')
-const appDiv=document.getElementById('app')
-const messages=document.getElementById('messages')
+// 🔴 REPLACE WITH YOUR FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+};
+
+firebase.initializeApp(firebaseConfig)
+const auth = firebase.auth()
+const db = firebase.database()
+
+const loginDiv = document.getElementById('login')
+const appDiv = document.getElementById('app')
+const messages = document.getElementById('messages')
 
 function login(){
-  username=user.value.trim()
-  if(!username||!pass.value)return
-  loginDiv.classList.add('hidden')
-  appDiv.classList.remove('hidden')
-  socket=io()
-  socket.emit('login',{u:username,p:pass.value})
-  socket.on('msg',m=>{
-    const d=document.createElement('div')
-    d.className='msg'
-    d.textContent=m.u+': '+m.t
-    messages.appendChild(d)
-    messages.scrollTop=messages.scrollHeight
+  const e = email.value
+  const p = password.value
+  auth.signInWithEmailAndPassword(e,p).catch(()=>{
+    return auth.createUserWithEmailAndPassword(e,p)
   })
 }
 
+auth.onAuthStateChanged(user=>{
+  if(!user) return
+  loginDiv.classList.add('hidden')
+  appDiv.classList.remove('hidden')
+
+  db.ref('messages').limitToLast(100).on('child_added',snap=>{
+    const m=snap.val()
+    const d=document.createElement('div')
+    d.className='msg'
+    d.textContent=m.user+': '+m.text
+    messages.appendChild(d)
+    messages.scrollTop=messages.scrollHeight
+  })
+})
+
 function send(){
   if(!msg.value)return
-  socket.emit('msg',msg.value)
+  db.ref('messages').push({
+    user: auth.currentUser.email,
+    text: msg.value
+  })
   msg.value=''
 }
 </script>
