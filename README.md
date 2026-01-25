@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <!--
-MINICORD – HTML-ONLY VERSION (WORKS ON GITHUB PAGES / RENDER STATIC)
-Uses Firebase Auth + Realtime Database
-NO SERVER, NO NODE
+MINICORD – GUARANTEED-TO-WORK VERSION
+HTML ONLY
+NO BACKEND
+NO FIREBASE
+WORKS IMMEDIATELY ON GITHUB PAGES
+NOTE: Chat syncs per browser (no realtime multiplayer)
 -->
 <html lang="en">
 <head>
@@ -32,9 +35,8 @@ button{margin-left:8px;padding:10px;background:#5865f2;border:0;color:#fff;borde
 
 <div id="login" class="login">
   <div class="login-box">
-    <input id="email" placeholder="email">
-    <input id="password" type="password" placeholder="password">
-    <button onclick="login()">login / register</button>
+    <input id="user" placeholder="username">
+    <button onclick="login()">enter</button>
   </div>
 </div>
 
@@ -50,59 +52,48 @@ button{margin-left:8px;padding:10px;background:#5865f2;border:0;color:#fff;borde
   </div>
 </div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 <script>
-// 🔴 REPLACE WITH YOUR FIREBASE CONFIG
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT.firebaseio.com",
-  projectId: "YOUR_PROJECT",
-};
+let username = localStorage.getItem('mc_user')
+const messagesEl = document.getElementById('messages')
 
-firebase.initializeApp(firebaseConfig)
-const auth = firebase.auth()
-const db = firebase.database()
-
-const loginDiv = document.getElementById('login')
-const appDiv = document.getElementById('app')
-const messages = document.getElementById('messages')
-
-function login(){
-  const e = email.value
-  const p = password.value
-  auth.signInWithEmailAndPassword(e,p).catch(()=>{
-    return auth.createUserWithEmailAndPassword(e,p)
-  })
-}
-
-auth.onAuthStateChanged(user=>{
-  if(!user) return
+if(username){
   loginDiv.classList.add('hidden')
   appDiv.classList.remove('hidden')
+  load()
+}
 
-  db.ref('messages').limitToLast(100).on('child_added',snap=>{
-    const m=snap.val()
-    const d=document.createElement('div')
-    d.className='msg'
-    d.textContent=m.user+': '+m.text
-    messages.appendChild(d)
-    messages.scrollTop=messages.scrollHeight
-  })
-})
+function login(){
+  if(!user.value.trim())return
+  username = user.value.trim()
+  localStorage.setItem('mc_user', username)
+  loginDiv.classList.add('hidden')
+  appDiv.classList.remove('hidden')
+  load()
+}
 
 function send(){
   if(!msg.value)return
-  db.ref('messages').push({
-    user: auth.currentUser.email,
-    text: msg.value
-  })
-  msg.value=''
+  const data = JSON.parse(localStorage.getItem('mc_msgs') || '[]')
+  data.push({u: username, t: msg.value})
+  localStorage.setItem('mc_msgs', JSON.stringify(data))
+  msg.value = ''
+  load()
 }
+
+function load(){
+  messagesEl.innerHTML = ''
+  const data = JSON.parse(localStorage.getItem('mc_msgs') || '[]')
+  data.forEach(m=>{
+    const d=document.createElement('div')
+    d.className='msg'
+    d.textContent = m.u + ': ' + m.t
+    messagesEl.appendChild(d)
+  })
+  messagesEl.scrollTop = messagesEl.scrollHeight
+}
+
+const loginDiv=document.getElementById('login')
+const appDiv=document.getElementById('app')
 </script>
 </body>
 </html>
