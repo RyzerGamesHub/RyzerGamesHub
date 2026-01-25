@@ -1,99 +1,141 @@
-<!DOCTYPE html>
-<!--
-MINICORD – GUARANTEED-TO-WORK VERSION
-HTML ONLY
-NO BACKEND
-NO FIREBASE
-WORKS IMMEDIATELY ON GITHUB PAGES
-NOTE: Chat syncs per browser (no realtime multiplayer)
--->
-<html lang="en">
+// server.js
+// Full working Discord-style chat with login using Node.js, Express, Socket.IO
+// Run: npm init -y && npm install express socket.io bcrypt jsonwebtoken
+// Then: node server.js
+
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+app.use(express.json());
+
+const SECRET = "super_secret_key_change_me";
+const users = {};
+const messages = [];
+
+app.post("/register", async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).end();
+  if (users[username]) return res.status(409).end();
+  users[username] = await bcrypt.hash(password, 10);
+  res.status(200).end();
+});
+
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+  const hash = users[username];
+  if (!hash) return res.status(401).end();
+  const ok = await bcrypt.compare(password, hash);
+  if (!ok) return res.status(401).end();
+  const token = jwt.sign({ username }, SECRET);
+  res.json({ token });
+});
+
+app.get("/", (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html>
 <head>
-<meta charset="UTF-8">
-<title>MiniCord</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<title>Chat</title>
+<script src="/socket.io/socket.io.js"></script>
 <style>
-*{box-sizing:border-box;font-family:Arial}
-body{margin:0;background:#2b2d31;color:#fff}
-.hidden{display:none}
-.login{height:100vh;display:flex;align-items:center;justify-content:center}
-.login-box{background:#1e1f22;padding:30px;border-radius:8px}
-.login-box input{display:block;margin:10px 0;padding:10px;width:220px}
-.app{display:flex;height:100vh}
-.servers{width:70px;background:#1e1f22}
-.channels{width:220px;background:#2b2d31;padding:10px}
-.channel{padding:6px;border-radius:4px}
-.chat{flex:1;display:flex;flex-direction:column;background:#313338}
-.messages{flex:1;overflow:auto;padding:10px}
-.msg{margin-bottom:6px}
-.input{display:flex;padding:10px;background:#383a40}
-input{flex:1;padding:10px;border:none;border-radius:4px}
-button{margin-left:8px;padding:10px;background:#5865f2;border:0;color:#fff;border-radius:4px}
+body { margin:0; font-family:Arial; background:#2b2d31; color:white; }
+#login,#chat { display:none; height:100vh; }
+#login { display:flex; align-items:center; justify-content:center; }
+#login form { background:#1e1f22; padding:20px; border-radius:8px; }
+#chat { display:flex; }
+#servers { width:70px; background:#1e1f22; }
+#channels { width:200px; background:#232428; }
+#main { flex:1; display:flex; flex-direction:column; }
+#messages { flex:1; padding:10px; overflow-y:auto; }
+#input { display:flex; }
+#input input { flex:1; padding:10px; }
+button { background:#5865f2; border:none; color:white; padding:10px; }
 </style>
 </head>
 <body>
-
-<div id="login" class="login">
-  <div class="login-box">
-    <input id="user" placeholder="username">
-    <button onclick="login()">enter</button>
-  </div>
+<div id="login">
+  <form id="loginForm">
+    <input id="user" placeholder="username" /><br/><br/>
+    <input id="pass" type="password" placeholder="password" /><br/><br/>
+    <button type="submit">Login / Register</button>
+  </form>
 </div>
-
-<div id="app" class="app hidden">
-  <div class="servers"></div>
-  <div class="channels"><div class="channel"># general</div></div>
-  <div class="chat">
-    <div id="messages" class="messages"></div>
-    <div class="input">
-      <input id="msg" placeholder="message #general">
-      <button onclick="send()">send</button>
+<div id="chat">
+  <div id="servers"></div>
+  <div id="channels"></div>
+  <div id="main">
+    <div id="messages"></div>
+    <div id="input">
+      <input id="msg" placeholder="Message" />
+      <button onclick="send()">Send</button>
     </div>
   </div>
 </div>
-
 <script>
-let username = localStorage.getItem('mc_user')
-const messagesEl = document.getElementById('messages')
+let token = null;
+const socket = io();
+const login = document.getElementById("login");
+const chat = document.getElementById("chat");
 
-if(username){
-  loginDiv.classList.add('hidden')
-  appDiv.classList.remove('hidden')
-  load()
+login.style.display = "flex";
+
+document.getElementById("loginForm").onsubmit = async e => {
+  e.preventDefault();
+  const username = user.value;
+  const password = pass.value;
+  await fetch("/register", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({username,password}) }).catch(()=>{});
+  const res = await fetch("/login", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({username,password}) });
+  const data = await res.json();
+  token = data.token;
+  socket.emit("auth", token);
+  login.style.display = "none";
+  chat.style.display = "flex";
+};
+
+socket.on("message", m => {
+  const div = document.createElement("div");
+  div.textContent = m.user + ": " + m.text;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+});
+
+function send() {
+  const text = msg.value;
+  msg.value = "";
+  socket.emit("message", { token, text });
 }
-
-function login(){
-  if(!user.value.trim())return
-  username = user.value.trim()
-  localStorage.setItem('mc_user', username)
-  loginDiv.classList.add('hidden')
-  appDiv.classList.remove('hidden')
-  load()
-}
-
-function send(){
-  if(!msg.value)return
-  const data = JSON.parse(localStorage.getItem('mc_msgs') || '[]')
-  data.push({u: username, t: msg.value})
-  localStorage.setItem('mc_msgs', JSON.stringify(data))
-  msg.value = ''
-  load()
-}
-
-function load(){
-  messagesEl.innerHTML = ''
-  const data = JSON.parse(localStorage.getItem('mc_msgs') || '[]')
-  data.forEach(m=>{
-    const d=document.createElement('div')
-    d.className='msg'
-    d.textContent = m.u + ': ' + m.t
-    messagesEl.appendChild(d)
-  })
-  messagesEl.scrollTop = messagesEl.scrollHeight
-}
-
-const loginDiv=document.getElementById('login')
-const appDiv=document.getElementById('app')
 </script>
 </body>
-</html>
+</html>`);
+});
+
+io.on("connection", socket => {
+  let user = null;
+
+  socket.on("auth", token => {
+    try {
+      const data = jwt.verify(token, SECRET);
+      user = data.username;
+      messages.forEach(m => socket.emit("message", m));
+    } catch {}
+  });
+
+  socket.on("message", ({ token, text }) => {
+    try {
+      const data = jwt.verify(token, SECRET);
+      const msg = { user: data.username, text };
+      messages.push(msg);
+      io.emit("message", msg);
+    } catch {}
+  });
+});
+
+server.listen(3000);
+
