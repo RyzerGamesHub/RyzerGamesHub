@@ -208,17 +208,13 @@ function generateWorld(){
   saveWorld();
 }
 
-/* DRAW */
+/* DRAW - Removed camera calculations here */
 function drawWorld(){
   game.innerHTML='';
   const viewportWidth = game.clientWidth;
   const viewportHeight = game.clientHeight;
 
-  if(playerEnabled){
-    camX = Math.min(Math.max(px*tileSize - viewportWidth/2,0), cols*tileSize-viewportWidth);
-    camY = Math.min(Math.max(py*tileSize - viewportHeight/2,0), rows*tileSize-viewportHeight);
-  }
-
+  // Camera position will be set in gameLoop for smooth follow
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
       const t=document.createElement('div');
@@ -259,13 +255,12 @@ function move(dx,dy){
   if(playerEnabled){
     px=Math.max(0,Math.min(cols-1,px+dx));
     py=Math.max(0,Math.min(rows-1,py+dy));
-    // No drawWorld() here to avoid regeneration
+    // No drawWorld() here to avoid regen
     updatePlayer();
   } else {
-    // when player disabled, move camera freely
+    // camera move when player disabled
     camX=Math.max(0, Math.min(cols*tileSize - game.clientWidth, camX + dx*tileSize));
     camY=Math.max(0, Math.min(rows*tileSize - game.clientHeight, camY + dy*tileSize));
-    drawWorld();
   }
 }
 
@@ -282,8 +277,16 @@ function updateMobs(){
 }
 
 function gameLoop(){
+  // Camera smoothly follows player
+  if(playerEnabled){
+    const viewportWidth = game.clientWidth;
+    const viewportHeight = game.clientHeight;
+    camX = Math.min(Math.max(px*tileSize - viewportWidth/2, 0), cols*tileSize - viewportWidth);
+    camY = Math.min(Math.max(py*tileSize - viewportHeight/2, 0), rows*tileSize - viewportHeight);
+  }
   requestAnimationFrame(gameLoop);
   updateMobs();
+  drawWorld(); // redraw each frame with updated camera position
 }
 gameLoop();
 
@@ -293,7 +296,6 @@ function togglePlayer(){
   document.getElementById('playerToggleLabel').innerText = playerEnabled?'Disable Player':'Enable Player';
   drawWorld();
 }
-
 function toggleMobs(){
   mobsEnabled=!mobsEnabled;
   document.getElementById('mobToggleLabel').innerText = mobsEnabled?'Disable Mobs':'Enable Mobs';
@@ -335,8 +337,8 @@ function downloadWorld(){
   a.download='world.json';
   a.click();
 }
-function loadWorld(){ fileInput.click(); }
-fileInput.onchange=e=>{
+function loadWorld(){ document.getElementById('fileInput').click(); }
+document.getElementById('fileInput').onchange=e=>{
   const r=new FileReader();
   r.onload=()=>{ world=JSON.parse(r.result); drawWorld(); saveWorld(); };
   r.readAsText(e.target.files[0]);
@@ -344,7 +346,6 @@ fileInput.onchange=e=>{
 
 /* CLEAR DOODLE */
 function clearDoodle(){
-  // make everything white for full scribble
   world = Array.from({length:rows},()=>Array(cols).fill('#ffffff'));
   drawWorld();
 }
