@@ -3,127 +3,112 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fluffy Chat</title>
+<title>Catch the Stars!</title>
 <style>
   body {
-    font-family: Arial, sans-serif;
-    background: #f0f0f5;
+    margin: 0;
+    background: linear-gradient(to top, #1e3c72, #2a5298);
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    margin: 0;
-  }
-  #chat-container {
-    width: 100%;
-    max-width: 500px;
-    height: 600px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-    display: flex;
-    flex-direction: column;
+    font-family: 'Arial', sans-serif;
     overflow: hidden;
-  }
-  #messages {
-    flex: 1;
-    padding: 16px;
-    overflow-y: auto;
-    border-bottom: 1px solid #ccc;
-  }
-  .message {
-    margin-bottom: 12px;
-    padding: 8px 12px;
-    border-radius: 8px;
-    max-width: 80%;
-    word-wrap: break-word;
-  }
-  .user {
-    background: #d1e7ff;
-    align-self: flex-end;
-  }
-  .bot {
-    background: #e2e2e2;
-    align-self: flex-start;
-  }
-  #input-area {
-    display: flex;
-    padding: 12px;
-    background: #f7f7f7;
-  }
-  #input-area input {
-    flex: 1;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-  }
-  #input-area button {
-    margin-left: 8px;
-    padding: 10px 16px;
-    border: none;
-    border-radius: 8px;
-    background: #4a90e2;
     color: white;
-    cursor: pointer;
+  }
+  #game {
+    position: relative;
+    width: 400px;
+    height: 600px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  }
+  .basket {
+    position: absolute;
+    bottom: 20px;
+    width: 80px;
+    height: 20px;
+    background: orange;
+    border-radius: 10px;
+  }
+  .star {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: yellow;
+    border-radius: 50%;
+  }
+  #score {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 18px;
   }
 </style>
 </head>
 <body>
-<div id="chat-container">
-  <div id="messages"></div>
-  <div id="input-area">
-    <input type="text" id="chat-input" placeholder="Type a message...">
-    <button onclick="sendMessage()">Send</button>
-  </div>
+
+<div id="game">
+  <div id="score">Score: 0</div>
+  <div class="basket" id="basket"></div>
 </div>
 
 <script>
-  const messagesDiv = document.getElementById('messages');
-  const chatInput = document.getElementById('chat-input');
+const game = document.getElementById('game');
+const basket = document.getElementById('basket');
+const scoreDisplay = document.getElementById('score');
+let score = 0;
+let basketX = 160; // starting position
+const basketSpeed = 20;
+basket.style.left = basketX + 'px';
 
-  // Load previous chat from localStorage
-  const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
-  chatHistory.forEach(msg => addMessage(msg.text, msg.type));
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'ArrowLeft') basketX = Math.max(0, basketX - basketSpeed);
+  if(e.key === 'ArrowRight') basketX = Math.min(game.offsetWidth - 80, basketX + basketSpeed);
+  basket.style.left = basketX + 'px';
+});
 
-  function addMessage(text, type) {
-    const div = document.createElement('div');
-    div.className = 'message ' + type;
-    div.innerText = text;
-    messagesDiv.appendChild(div);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  }
+function createStar() {
+  const star = document.createElement('div');
+  star.className = 'star';
+  const x = Math.random() * (game.offsetWidth - 20);
+  star.style.left = x + 'px';
+  star.style.top = '0px';
+  game.appendChild(star);
 
-  function sendMessage() {
-    const text = chatInput.value.trim();
-    if (!text) return;
-    
-    addMessage(text, 'user');
-    chatInput.value = '';
-    
-    // Save to localStorage
-    chatHistory.push({ text, type: 'user' });
-    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-    
-    // Simple bot reply
-    setTimeout(() => {
-      const reply = generateReply(text);
-      addMessage(reply, 'bot');
-      chatHistory.push({ text: reply, type: 'bot' });
-      localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-    }, 500);
-  }
+  let fallSpeed = 2 + Math.random() * 3;
 
-  function generateReply(userMessage) {
-    // Very basic simulated reply
-    if (userMessage.toLowerCase().includes('hello')) return 'Hi there!';
-    if (userMessage.toLowerCase().includes('brawl')) return 'Brawl Stars sounds fun!';
-    return 'I see... tell me more.';
-  }
+  const fallInterval = setInterval(() => {
+    let top = parseFloat(star.style.top);
+    if(top + 20 >= game.offsetHeight - 20 && top + 20 <= game.offsetHeight){
+      // check collision with basket
+      const basketLeft = basketX;
+      const basketRight = basketX + 80;
+      const starLeft = parseFloat(star.style.left);
+      const starRight = starLeft + 20;
+      if(starRight > basketLeft && starLeft < basketRight){
+        score++;
+        scoreDisplay.innerText = 'Score: ' + score;
+        star.remove();
+        clearInterval(fallInterval);
+        return;
+      }
+    }
+    if(top > game.offsetHeight){
+      star.remove();
+      clearInterval(fallInterval);
+      return;
+    }
+    star.style.top = top + fallSpeed + 'px';
+  }, 20);
+}
 
-  chatInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') sendMessage();
-  });
+// spawn stars randomly
+setInterval(createStar, 1000);
 </script>
+
 </body>
 </html>
 
