@@ -76,7 +76,7 @@ button {
   width:calc(100vw - 60px);
   height:calc(100vh - 40px);
   overflow:hidden;
-  touch-action: none;
+  background:#fff; /* default white for clear mode */
 }
 
 .tile {
@@ -136,8 +136,8 @@ button {
   <button onclick="clearDoodle()">Clear Page</button>
   <button onclick="downloadWorld()">Download</button>
   <button onclick="loadWorld()">Load</button>
-  <button id="togglePlayerBtn">Disable Player</button>
-  <button id="toggleMobsBtn">Disable Mobs</button>
+  <button onclick="togglePlayer()"><span id="playerToggleLabel">Disable Player</span></button>
+  <button onclick="toggleMobs()"><span id="mobToggleLabel">Disable Mobs</span></button>
 </div>
 <div id="inventory"></div>
 <div id="game"></div>
@@ -159,14 +159,14 @@ const rows = 150;
 
 let world = [];
 let selectedTile = 'grass';
+let playerEnabled = true;
+let mobsEnabled = true;
 
 /* ENTITIES */
-let playerEnabled = true;
 const player = document.createElement('div');
 player.id='player';
 game.appendChild(player);
 
-let mobsEnabled = true;
 const mobs = [];
 for(let i=0;i<5;i++){
   const m=document.createElement('div');
@@ -177,7 +177,7 @@ for(let i=0;i<5;i++){
 }
 
 let px=Math.floor(cols/2), py=Math.floor(rows/2);
-let camX=0, camY=0; // camera for free zoom
+let camX=0, camY=0;
 
 /* HELPERS */
 function inBounds(x,y){ return x>=0 && y>=0 && x<cols && y<rows }
@@ -199,19 +199,30 @@ function generateWorld(){
   for(let i=0;i<4;i++) blob(rand(cols),rand(rows),rand(10,25),'water');
   for(let y=0;y<rows;y++){ for(let x=0;x<cols;x++){
     if(world[y][x]==='water'){
-      for(let dy=-1;dy<=1;dy++){ for(let dx=-1;dx<=1;dx++){
-        if(inBounds(x+dx,y+dy)&&world[y+dy][x+dx]==='grass') world[y+dy][x+dx]='sand';
-      }}
+      for(let dy=-1;dy<=1;dy++){
+        for(let dx=-1;dx<=1;dx++){
+          if(inBounds(x+dx,y+dy)&&world[y+dy][x+dx]==='grass') world[y+dy][x+dx]='sand';
+        }
+      }
     }
   }}
+  if(Math.random()<0.7){
+    const cx=rand(cols),cy=rand(rows);
+    blob(cx,cy,rand(12,20),'sand',['grass']);
+    blob(cx,cy,rand(5,10),'cactus',['sand']);
+  }
+  for(let i=0;i<5;i++) blob(rand(cols),rand(rows),rand(8,15),'tree',['grass']);
+  for(let y=0;y<rows;y++){ for(let x=0;x<cols;x++){
+    if(world[y][x]==='grass' && Math.random()<0.15) world[y][x]='tallgrass';
+  }}
+  if(Math.random()<0.25) blob(rand(cols),rand(rows),rand(6,10),'cave',['grass','dirt']);
   drawWorld();
   saveWorld();
 }
 
-/* DRAW WORLD */
+/* DRAW */
 function drawWorld(){
   game.innerHTML='';
-
   const viewportWidth = game.clientWidth;
   const viewportHeight = game.clientHeight;
 
@@ -252,8 +263,6 @@ function drawWorld(){
 /* PLAYER */
 function updatePlayer(){
   if(!playerEnabled) return;
-  const viewportWidth = game.clientWidth;
-  const viewportHeight = game.clientHeight;
   player.style.left=(px*tileSize-camX)+'px';
   player.style.top=(py*tileSize-camY)+'px';
 }
@@ -262,12 +271,13 @@ function move(dx,dy){
   if(playerEnabled){
     px=Math.max(0,Math.min(cols-1,px+dx));
     py=Math.max(0,Math.min(rows-1,py+dy));
+    drawWorld();
   } else {
-    camX-=dx*tileSize; camY-=dy*tileSize;
-    camX=Math.max(0,Math.min(camX, cols*tileSize-game.clientWidth));
-    camY=Math.max(0,Math.min(camY, rows*tileSize-game.clientHeight));
+    // when player disabled, move camera freely
+    camX=Math.max(0, Math.min(cols*tileSize - game.clientWidth, camX + dx*tileSize));
+    camY=Math.max(0, Math.min(rows*tileSize - game.clientHeight, camY + dy*tileSize));
+    drawWorld();
   }
-  drawWorld();
 }
 
 /* MOBS */
@@ -282,8 +292,24 @@ function updateMobs(){
   });
 }
 
-function gameLoop(){ requestAnimationFrame(gameLoop); updateMobs(); }
+function gameLoop(){
+  requestAnimationFrame(gameLoop);
+  updateMobs();
+}
 gameLoop();
+
+/* TOGGLES */
+function togglePlayer(){
+  playerEnabled=!playerEnabled;
+  document.getElementById('playerToggleLabel').innerText = playerEnabled?'Disable Player':'Enable Player';
+  drawWorld();
+}
+
+function toggleMobs(){
+  mobsEnabled=!mobsEnabled;
+  document.getElementById('mobToggleLabel').innerText = mobsEnabled?'Disable Mobs':'Enable Mobs';
+  drawWorld();
+}
 
 /* INPUT */
 document.addEventListener('keydown',e=>{
@@ -299,9 +325,9 @@ document.querySelector('.right').ontouchstart=()=>move(1,0);
 
 /* BUILD / DOODLE */
 game.onclick=e=>{
-  const r=game.getBoundingClientRect();
-  const x=Math.floor((e.clientX-r.left)/tileSize + camX/tileSize);
-  const y=Math.floor((e.clientY-r.top)/tileSize + camY/tileSize);
+  const rect=game.getBoundingClientRect();
+  const x=Math.floor((e.clientX-rect.left+camX)/tileSize);
+  const y=Math.floor((e.clientY-rect.top+camY)/tileSize);
   if(!inBounds(x,y)) return;
   world[y][x]=selectedTile==='rainbow'?'rainbow':
                selectedTile==='invisible'?'invisible':
@@ -327,23 +353,12 @@ fileInput.onchange=e=>{
   r.readAsText(e.target.files[0]);
 }
 
-/* CLEAR DOODLE - Blank white page */
+/* CLEAR DOODLE */
 function clearDoodle(){
-  world = Array.from({length:rows},()=>Array(cols).fill('invisible'));
+  // make everything white for full scribble
+  world = Array.from({length:rows},()=>Array(cols).fill('#ffffff'));
   drawWorld();
 }
-
-/* TOGGLE PLAYER / MOBS */
-document.getElementById('togglePlayerBtn').onclick=()=>{
-  playerEnabled=!playerEnabled;
-  document.getElementById('togglePlayerBtn').innerText=playerEnabled?'Disable Player':'Enable Player';
-  drawWorld();
-};
-document.getElementById('toggleMobsBtn').onclick=()=>{
-  mobsEnabled=!mobsEnabled;
-  document.getElementById('toggleMobsBtn').innerText=mobsEnabled?'Disable Mobs':'Enable Mobs';
-  drawWorld();
-};
 
 /* INVENTORY */
 const colors = ['grass','tallgrass','water','sand','tree','rock','cactus','cave','rainbow','invisible','#ff0000','#00ff00','#0000ff','#ffff00','#ff00ff','#00ffff','#ffffff','#000000'];
@@ -361,6 +376,7 @@ colors.forEach(c=>{
   else if(c==='rainbow') i.style.background='linear-gradient(45deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f)';
   else if(c==='invisible') i.style.background='transparent';
   else i.style.background=c;
+
   if(c===selectedTile) i.classList.add('selected');
   i.onclick=()=>{
     document.querySelectorAll('.inventory-item').forEach(e=>e.classList.remove('selected'));
