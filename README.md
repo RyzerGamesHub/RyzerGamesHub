@@ -1,8 +1,7 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Pixel Sandbox Deluxe</title>
 <style>
 body {
@@ -11,7 +10,6 @@ body {
   background:#000;
   font-family:monospace;
 }
-
 #title {
   position:absolute;
   top:6px;
@@ -21,7 +19,6 @@ body {
   font-weight:bold;
   z-index:1000;
 }
-
 #top-buttons {
   position:absolute;
   top:6px;
@@ -31,7 +28,6 @@ body {
   z-index:1000;
   flex-wrap:wrap;
 }
-
 button {
   font-family:monospace;
   padding:4px 8px;
@@ -39,7 +35,6 @@ button {
   background:rgba(255,255,255,.9);
   cursor:pointer;
 }
-
 #inventory {
   position:absolute;
   top:40px;
@@ -59,7 +54,6 @@ button {
 }
 #inventory::-webkit-scrollbar { width:6px; }
 #inventory::-webkit-scrollbar-thumb { background:rgba(255,255,255,.5); border-radius:3px; }
-
 .inventory-item {
   width:40px;
   height:40px;
@@ -68,7 +62,6 @@ button {
   flex-shrink:0;
 }
 .selected { border-color:yellow }
-
 #game {
   position:absolute;
   top:40px;
@@ -78,13 +71,11 @@ button {
   overflow:hidden;
   background:#fff; /* default white for clear mode */
 }
-
 .tile {
   position:absolute;
   width:20px;
   height:20px;
 }
-
 #player {
   position:absolute;
   width:18px;
@@ -93,7 +84,6 @@ button {
   background:orange;
   z-index:10;
 }
-
 .mob {
   position:absolute;
   width:18px;
@@ -105,7 +95,6 @@ button {
   align-items:center;
   font-size:10px;
 }
-
 #touch-controls {
   position:absolute;
   bottom:12px;
@@ -123,7 +112,6 @@ button {
 .left{grid-column:1;grid-row:2}
 .right{grid-column:3;grid-row:2}
 .down{grid-column:2;grid-row:3}
-
 @media(max-width:768px){
   #top-buttons { flex-direction:column; top:auto; bottom:12px; right:12px; }
 }
@@ -147,7 +135,7 @@ button {
   <div class="touch-btn right"></div>
   <div class="touch-btn down"></div>
 </div>
-<input type="file" id="fileInput" hidden>
+<input type="file" id="fileInput" hidden />
 
 <script>
 const game = document.getElementById('game');
@@ -235,8 +223,6 @@ function drawWorld(){
     for(let x=0;x<cols;x++){
       const t=document.createElement('div');
       t.className='tile';
-      t.dataset.x = x;
-      t.dataset.y = y;
       t.style.left=(x*tileSize-camX)+'px';
       t.style.top=(y*tileSize-camY)+'px';
       const val = world[y][x];
@@ -269,31 +255,17 @@ function updatePlayer(){
   player.style.top=(py*tileSize-camY)+'px';
 }
 
-function move(dx, dy){
+function move(dx,dy){
   if(playerEnabled){
-    px = Math.max(0, Math.min(cols-1, px + dx));
-    py = Math.max(0, Math.min(rows-1, py + dy));
-
-    // only move player, update camera
-    const vw = game.clientWidth;
-    const vh = game.clientHeight;
-    camX = Math.min(Math.max(px*tileSize - vw/2, 0), cols*tileSize - vw);
-    camY = Math.min(Math.max(py*tileSize - vh/2, 0), rows*tileSize - vh);
-
-    updatePlayer(); // just move player, no redrawWorld()
-  } else {
-    camX = Math.max(0, Math.min(cols*tileSize - game.clientWidth, camX + dx*tileSize));
-    camY = Math.max(0, Math.min(rows*tileSize - game.clientHeight, camY + dy*tileSize));
-    
-    // move all visible tiles relative to camera
-    document.querySelectorAll('.tile').forEach(t=>{
-      const x = parseInt(t.dataset.x);
-      const y = parseInt(t.dataset.y);
-      t.style.left = (x*tileSize - camX) + 'px';
-      t.style.top = (y*tileSize - camY) + 'px';
-    });
-
+    px=Math.max(0,Math.min(cols-1,px+dx));
+    py=Math.max(0,Math.min(rows-1,py+dy));
+    // No drawWorld() here to avoid regeneration
     updatePlayer();
+  } else {
+    // when player disabled, move camera freely
+    camX=Math.max(0, Math.min(cols*tileSize - game.clientWidth, camX + dx*tileSize));
+    camY=Math.max(0, Math.min(rows*tileSize - game.clientHeight, camY + dy*tileSize));
+    drawWorld();
   }
 }
 
@@ -301,28 +273,13 @@ function move(dx, dy){
 function updateMobs(){
   if(!mobsEnabled) return;
   mobs.forEach(m=>{
-    // slower: 1% chance per frame
-    if(Math.random() < 0.01){ 
-      const dirs = [[-1,0],[1,0],[0,-1],[0,1],[0,0]]; // include "stay"
-      const [dx, dy] = dirs[rand(dirs.length)];
-      const nx = m.x + dx;
-      const ny = m.y + dy;
-      // only move if inside bounds and not water
-      if(inBounds(nx, ny) && !['water','boat'].includes(world[ny][nx])) {
-        m.dx = dx; 
-        m.dy = dy;
-      } else {
-        m.dx = 0; 
-        m.dy = 0;
-      }
-    }
-    m.x = Math.max(0, Math.min(cols-1, m.x + m.dx));
-    m.y = Math.max(0, Math.min(rows-1, m.y + m.dy));
-    m.el.style.left = (m.x*tileSize - camX) + 'px';
-    m.el.style.top = (m.y*tileSize - camY) + 'px';
+    if(Math.random()<0.02){ m.dx=rand(3)-1; m.dy=rand(3)-1; }
+    m.x=Math.max(0,Math.min(cols-1,m.x+m.dx));
+    m.y=Math.max(0,Math.min(rows-1,m.y+m.dy));
+    m.el.style.left=(m.x*tileSize-camX)+'px';
+    m.el.style.top=(m.y*tileSize-camY)+'px';
   });
 }
-
 
 function gameLoop(){
   requestAnimationFrame(gameLoop);
@@ -420,7 +377,13 @@ colors.forEach(c=>{
 
 /* INIT */
 const saved=localStorage.getItem('sandboxWorld');
-saved ? (world=JSON.parse(saved),drawWorld()) : generateWorld();
+if(saved){
+  world=JSON.parse(saved);
+} else {
+  generateWorld();
+}
+drawWorld();
+
 </script>
 </body>
 </html>
