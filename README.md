@@ -18,8 +18,8 @@
   }
   #game {
     position: relative;
-    width: 400px;
-    height: 600px;
+    width: 75px;
+    height: 100px;
     background: rgba(0,0,0,0.3);
     border-radius: 12px;
     overflow: hidden;
