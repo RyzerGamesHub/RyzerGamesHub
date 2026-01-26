@@ -357,3 +357,14 @@ saved ? (world=JSON.parse(saved),drawWorld()) : generateWorld();
 
 </body>
 </html>
+
+  inventory.appendChild(i);
+});
+
+/* INIT */
+const saved=localStorage.getItem('sandboxWorld');
+saved ? (world=JSON.parse(saved),drawWorld()) : generateWorld();
+</script>
+
+</body>
+</html>
