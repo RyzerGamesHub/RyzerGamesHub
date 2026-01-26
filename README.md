@@ -1,11 +1,3 @@
-// server.js
-// ZERO-FRAMEWORK, ACTUALLY-WORKING CHAT SITE
-// Login page + Chat page + realtime messages
-// Run:
-// npm init -y
-// npm install express socket.io
-// node server.js
-
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
