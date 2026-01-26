@@ -3,112 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catch the Stars!</title>
+<title>Mini Open World</title>
 <style>
   body {
     margin: 0;
-    background: linear-gradient(to top, #1e3c72, #2a5298);
+    background: #333;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    font-family: 'Arial', sans-serif;
     overflow: hidden;
-    color: white;
+    font-family: sans-serif;
   }
+
   #game {
     position: relative;
-    width: 400px;
-    height: 600px;
-    background: rgba(0,0,0,0.3);
-    border-radius: 12px;
+    width: 600px;
+    height: 400px;
+    background: #87ceeb; /* sky color */
     overflow: hidden;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    border: 4px solid #222;
   }
-  .basket {
+
+  .tile {
     position: absolute;
-    bottom: 20px;
-    width: 80px;
-    height: 20px;
+    width: 40px;
+    height: 40px;
+    box-sizing: border-box;
+  }
+
+  .grass {
+    background: #3cb043;
+  }
+  .water {
+    background: #1e90ff;
+  }
+  .tree {
+    background: #2e8b57;
+  }
+
+  #player {
+    position: absolute;
+    width: 30px;
+    height: 30px;
     background: orange;
-    border-radius: 10px;
+    border-radius: 6px;
+    top: 200px;
+    left: 300px;
+    z-index: 10;
   }
-  .star {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    background: yellow;
-    border-radius: 50%;
-  }
-  #score {
+
+  #info {
     position: absolute;
     top: 10px;
     left: 10px;
-    font-size: 18px;
+    color: white;
+    font-weight: bold;
   }
 </style>
 </head>
 <body>
-
 <div id="game">
-  <div id="score">Score: 0</div>
-  <div class="basket" id="basket"></div>
+  <div id="info">Use Arrow Keys to Move</div>
+  <div id="player"></div>
 </div>
 
 <script>
 const game = document.getElementById('game');
-const basket = document.getElementById('basket');
-const scoreDisplay = document.getElementById('score');
-let score = 0;
-let basketX = 160; // starting position
-const basketSpeed = 20;
-basket.style.left = basketX + 'px';
+const player = document.getElementById('player');
+const tileSize = 40;
+const cols = Math.floor(game.offsetWidth / tileSize);
+const rows = Math.floor(game.offsetHeight / tileSize);
+let tiles = [];
 
-document.addEventListener('keydown', (e) => {
-  if(e.key === 'ArrowLeft') basketX = Math.max(0, basketX - basketSpeed);
-  if(e.key === 'ArrowRight') basketX = Math.min(game.offsetWidth - 80, basketX + basketSpeed);
-  basket.style.left = basketX + 'px';
-});
-
-function createStar() {
-  const star = document.createElement('div');
-  star.className = 'star';
-  const x = Math.random() * (game.offsetWidth - 20);
-  star.style.left = x + 'px';
-  star.style.top = '0px';
-  game.appendChild(star);
-
-  let fallSpeed = 2 + Math.random() * 3;
-
-  const fallInterval = setInterval(() => {
-    let top = parseFloat(star.style.top);
-    if(top + 20 >= game.offsetHeight - 20 && top + 20 <= game.offsetHeight){
-      // check collision with basket
-      const basketLeft = basketX;
-      const basketRight = basketX + 80;
-      const starLeft = parseFloat(star.style.left);
-      const starRight = starLeft + 20;
-      if(starRight > basketLeft && starLeft < basketRight){
-        score++;
-        scoreDisplay.innerText = 'Score: ' + score;
-        star.remove();
-        clearInterval(fallInterval);
-        return;
-      }
-    }
-    if(top > game.offsetHeight){
-      star.remove();
-      clearInterval(fallInterval);
-      return;
-    }
-    star.style.top = top + fallSpeed + 'px';
-  }, 20);
+// randomly generate tiles
+for(let y=0; y<rows; y++){
+  for(let x=0; x<cols; x++){
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    tile.style.left = x*tileSize + 'px';
+    tile.style.top = y*tileSize + 'px';
+    // random terrain
+    const rand = Math.random();
+    if(rand < 0.1) tile.classList.add('water');
+    else if(rand < 0.2) tile.classList.add('tree');
+    else tile.classList.add('grass');
+    game.appendChild(tile);
+    tiles.push({el: tile, x, y, type: tile.classList[1]});
+  }
 }
 
-// spawn stars randomly
-setInterval(createStar, 1000);
-</script>
+let playerX = 7; // starting tile
+let playerY = 5;
+const maxX = cols-1;
+const maxY = rows-1;
 
+function movePlayer(dx, dy){
+  const newX = playerX + dx;
+  const newY = playerY + dy;
+  if(newX < 0 || newX > maxX || newY < 0 || newY > maxY) return;
+
+  // block movement on water
+  const tile = tiles.find(t => t.x===newX && t.y===newY);
+  if(tile.type === 'water') return;
+
+  playerX = newX;
+  playerY = newY;
+  player.style.left = playerX*tileSize + 5 + 'px';
+  player.style.top = playerY*tileSize + 5 + 'px';
+}
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'ArrowUp') movePlayer(0,-1);
+  if(e.key === 'ArrowDown') movePlayer(0,1);
+  if(e.key === 'ArrowLeft') movePlayer(-1,0);
+  if(e.key === 'ArrowRight') movePlayer(1,0);
+});
+</script>
 </body>
 </html>
-
