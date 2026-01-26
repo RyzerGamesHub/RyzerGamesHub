@@ -24,44 +24,23 @@
     z-index: 1000;
   }
 
-  #game {
+  #top-buttons {
     position: absolute;
-    top: 40px;
-    left: 48px;
-    width: calc(100vw - 48px);
-    height: calc(100vh - 40px);
-    overflow: hidden;
-    background: #87ceeb;
+    top: 6px;
+    right: 6px;
+    display: flex;
+    gap: 6px;
+    z-index: 1000;
   }
 
-  .tile {
-    position: absolute;
-    width: 20px;
-    height: 20px;
+  button {
+    font-family: monospace;
+    padding: 4px 8px;
+    border: none;
+    cursor: pointer;
+    background: rgba(255,255,255,0.85);
   }
 
-  /* WORLD COLORS */
-  .grass  { background: #4caf50; }
-  .water  { background: #4aa3df; }
-  .tree   { background: #2f6f4e; }
-  .sand   { background: #e6d690; }
-  .rock   { background: #6b6b6b; }
-  .flower { background: #e58bb6; }
-  .dirt   { background: #8b5a2b; }
-  .lava   { background: #d84315; }
-
-  #player, #mob {
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    border-radius: 2px;
-    z-index: 10;
-  }
-
-  #player { background: orange; }
-  #mob { background: crimson; z-index: 9; }
-
-  /* LEFT TILE BAR */
   #inventory {
     position: absolute;
     top: 40px;
@@ -72,8 +51,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-top: 6px;
     gap: 6px;
+    padding-top: 6px;
     z-index: 1000;
   }
 
@@ -87,7 +66,40 @@
     border-color: yellow;
   }
 
-  /* TOUCH CONTROLS */
+  #game {
+    position: absolute;
+    top: 40px;
+    left: 48px;
+    width: calc(100vw - 48px);
+    height: calc(100vh - 40px);
+  }
+
+  .tile {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+  }
+
+  .grass  { background:#4caf50 }
+  .water  { background:#4aa3df }
+  .tree   { background:#2f6f4e }
+  .sand   { background:#e6d690 }
+  .rock   { background:#6b6b6b }
+  .flower { background:#e58bb6 }
+  .dirt   { background:#8b5a2b }
+  .lava   { background:#d84315 }
+
+  #player, #mob {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 2px;
+    z-index: 10;
+  }
+
+  #player { background: orange }
+  #mob { background: crimson; z-index: 9 }
+
   #touch-controls {
     position: absolute;
     bottom: 12px;
@@ -95,8 +107,8 @@
     width: 120px;
     height: 120px;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
+    grid-template-columns: repeat(3,1fr);
+    grid-template-rows: repeat(3,1fr);
     gap: 6px;
     z-index: 1000;
   }
@@ -104,23 +116,25 @@
   .touch-btn {
     background: rgba(255,255,255,0.25);
     border-radius: 8px;
-    touch-action: none;
   }
 
-  .touch-btn:active {
-    background: rgba(255,255,255,0.45);
-  }
-
-  .up    { grid-column: 2; grid-row: 1; }
-  .left  { grid-column: 1; grid-row: 2; }
-  .right { grid-column: 3; grid-row: 2; }
-  .down  { grid-column: 2; grid-row: 3; }
+  .up { grid-column:2;grid-row:1 }
+  .left { grid-column:1;grid-row:2 }
+  .right { grid-column:3;grid-row:2 }
+  .down { grid-column:2;grid-row:3 }
 </style>
 </head>
 
 <body>
 
-<div id="title">Move • Build • Break</div>
+<div id="title">Pixel Sandbox</div>
+
+<div id="top-buttons">
+  <button onclick="resetWorld()">Reset</button>
+  <button onclick="downloadWorld()">Download</button>
+  <button onclick="loadWorld()">Load</button>
+</div>
+
 <div id="inventory"></div>
 <div id="game"></div>
 
@@ -131,10 +145,11 @@
   <div class="touch-btn down"></div>
 </div>
 
+<input type="file" id="fileInput" hidden>
+
 <script>
 const game = document.getElementById('game');
-const inventoryDiv = document.getElementById('inventory');
-
+const inventory = document.getElementById('inventory');
 const tileSize = 20;
 const cols = Math.floor((window.innerWidth - 48) / tileSize);
 const rows = Math.floor((window.innerHeight - 40) / tileSize);
@@ -146,112 +161,140 @@ const colors = {
   dirt:'#8b5a2b', lava:'#d84315'
 };
 
-let selectedTile = 'grass';
 let tiles = [];
+let selectedTile = 'grass';
 
-/* TERRAIN */
-function randomTileType() {
+/* WORLD GEN */
+function randomTile() {
   const r = Math.random();
-  if (r < 0.65) return 'grass';
-  if (r < 0.75) return 'water';
-  if (r < 0.82) return 'sand';
-  if (r < 0.9)  return 'tree';
-  if (r < 0.95) return 'flower';
-  if (r < 0.98) return 'rock';
-  if (r < 0.995) return 'dirt';
+  if (r < .65) return 'grass';
+  if (r < .75) return 'water';
+  if (r < .82) return 'sand';
+  if (r < .9) return 'tree';
+  if (r < .95) return 'flower';
+  if (r < .98) return 'rock';
+  if (r < .995) return 'dirt';
   return 'lava';
 }
 
-for (let y = 0; y < rows; y++) {
-  for (let x = 0; x < cols; x++) {
-    const tile = document.createElement('div');
-    tile.className = 'tile ' + randomTileType();
-    tile.style.left = x * tileSize + 'px';
-    tile.style.top  = y * tileSize + 'px';
-    game.appendChild(tile);
-    tiles.push({ el: tile, x, y, type: tile.classList[1] });
+function generateWorld(data=null) {
+  game.innerHTML = '';
+  tiles = [];
+
+  for (let y=0;y<rows;y++){
+    for (let x=0;x<cols;x++){
+      const type = data ? data[y][x] : randomTile();
+      const t = document.createElement('div');
+      t.className = 'tile ' + type;
+      t.style.left = x*tileSize+'px';
+      t.style.top = y*tileSize+'px';
+      game.appendChild(t);
+      tiles.push({x,y,type,el:t});
+    }
   }
+  saveWorld();
 }
+
+function saveWorld() {
+  const map = [];
+  for (let y=0;y<rows;y++){
+    map[y] = [];
+    for (let x=0;x<cols;x++){
+      map[y][x] = tiles.find(t=>t.x===x&&t.y===y).type;
+    }
+  }
+  localStorage.setItem('sandboxWorld', JSON.stringify(map));
+}
+
+/* LOAD SAVED */
+const saved = localStorage.getItem('sandboxWorld');
+generateWorld(saved ? JSON.parse(saved) : null);
+
+/* RESET */
+function resetWorld(){
+  localStorage.removeItem('sandboxWorld');
+  generateWorld();
+}
+
+/* DOWNLOAD */
+function downloadWorld(){
+  const data = localStorage.getItem('sandboxWorld');
+  const blob = new Blob([data],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sandbox-world.json';
+  a.click();
+}
+
+/* LOAD FILE */
+function loadWorld(){
+  document.getElementById('fileInput').click();
+}
+
+document.getElementById('fileInput').onchange = e => {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const data = JSON.parse(reader.result);
+    generateWorld(data);
+  };
+  reader.readAsText(e.target.files[0]);
+};
 
 /* PLAYER */
 const player = document.createElement('div');
 player.id = 'player';
 game.appendChild(player);
-
-let playerX = Math.floor(cols / 2);
-let playerY = Math.floor(rows / 2);
-
-function updatePlayer() {
-  player.style.left = playerX * tileSize + 1 + 'px';
-  player.style.top  = playerY * tileSize + 1 + 'px';
+let px = Math.floor(cols/2), py = Math.floor(rows/2);
+function updatePlayer(){
+  player.style.left = px*tileSize+1+'px';
+  player.style.top = py*tileSize+1+'px';
 }
 updatePlayer();
 
-function movePlayer(dx, dy) {
-  playerX = Math.max(0, Math.min(cols - 1, playerX + dx));
-  playerY = Math.max(0, Math.min(rows - 1, playerY + dy));
+function move(dx,dy){
+  px = Math.max(0,Math.min(cols-1,px+dx));
+  py = Math.max(0,Math.min(rows-1,py+dy));
   updatePlayer();
 }
 
-/* KEYBOARD */
-document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowUp') movePlayer(0,-1);
-  if (e.key === 'ArrowDown') movePlayer(0,1);
-  if (e.key === 'ArrowLeft') movePlayer(-1,0);
-  if (e.key === 'ArrowRight') movePlayer(1,0);
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowUp')move(0,-1);
+  if(e.key==='ArrowDown')move(0,1);
+  if(e.key==='ArrowLeft')move(-1,0);
+  if(e.key==='ArrowRight')move(1,0);
 });
 
-/* TOUCH */
-document.querySelector('.up').ontouchstart    = () => movePlayer(0,-1);
-document.querySelector('.down').ontouchstart  = () => movePlayer(0,1);
-document.querySelector('.left').ontouchstart  = () => movePlayer(-1,0);
-document.querySelector('.right').ontouchstart = () => movePlayer(1,0);
+document.querySelector('.up').ontouchstart=()=>move(0,-1);
+document.querySelector('.down').ontouchstart=()=>move(0,1);
+document.querySelector('.left').ontouchstart=()=>move(-1,0);
+document.querySelector('.right').ontouchstart=()=>move(1,0);
 
-/* BUILD / BREAK */
-game.addEventListener('click', e => {
-  const rect = game.getBoundingClientRect();
-  const x = Math.floor((e.clientX - rect.left) / tileSize);
-  const y = Math.floor((e.clientY - rect.top) / tileSize);
-  const tile = tiles.find(t => t.x === x && t.y === y);
-  if (!tile) return;
-
-  tile.type = tile.type !== 'grass' ? 'grass' : selectedTile;
-  tile.el.className = 'tile ' + tile.type;
-});
+/* BUILD */
+game.onclick = e => {
+  const r = game.getBoundingClientRect();
+  const x = Math.floor((e.clientX-r.left)/tileSize);
+  const y = Math.floor((e.clientY-r.top)/tileSize);
+  const t = tiles.find(t=>t.x===x&&t.y===y);
+  if(!t)return;
+  t.type = t.type!=='grass'?'grass':selectedTile;
+  t.el.className='tile '+t.type;
+  saveWorld();
+};
 
 /* INVENTORY */
-tileTypes.forEach(type => {
-  const item = document.createElement('div');
-  item.className = 'inventory-item';
-  item.style.background = colors[type];
-  if (type === selectedTile) item.classList.add('selected');
-
-  item.onclick = () => {
-    document.querySelectorAll('.inventory-item').forEach(i => i.classList.remove('selected'));
-    item.classList.add('selected');
-    selectedTile = type;
+tileTypes.forEach(type=>{
+  const i=document.createElement('div');
+  i.className='inventory-item';
+  i.style.background=colors[type];
+  if(type===selectedTile)i.classList.add('selected');
+  i.onclick=()=>{
+    document.querySelectorAll('.inventory-item').forEach(e=>e.classList.remove('selected'));
+    i.classList.add('selected');
+    selectedTile=type;
   };
-  inventoryDiv.appendChild(item);
+  inventory.appendChild(i);
 });
-
-/* MOB */
-const mob = document.createElement('div');
-mob.id = 'mob';
-game.appendChild(mob);
-
-let mobX = Math.floor(Math.random() * cols);
-let mobY = Math.floor(Math.random() * rows);
-
-setInterval(() => {
-  mobX += Math.floor(Math.random()*3)-1;
-  mobY += Math.floor(Math.random()*3)-1;
-  mobX = Math.max(0, Math.min(cols - 1, mobX));
-  mobY = Math.max(0, Math.min(rows - 1, mobY));
-  mob.style.left = mobX * tileSize + 1 + 'px';
-  mob.style.top  = mobY * tileSize + 1 + 'px';
-}, 450);
 </script>
 
 </body>
 </html>
-
