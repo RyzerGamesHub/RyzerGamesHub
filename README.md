@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pixel Sandbox Deluxe</title>
-
 <style>
 body {
   margin:0;
@@ -30,6 +29,7 @@ body {
   display:flex;
   gap:6px;
   z-index:1000;
+  flex-wrap:wrap;
 }
 
 button {
@@ -44,7 +44,7 @@ button {
   position:absolute;
   top:40px;
   left:0;
-  width:48px;
+  width:60px;
   height:calc(100vh - 40px);
   background:rgba(0,0,0,.25);
   display:flex;
@@ -53,28 +53,27 @@ button {
   gap:6px;
   padding-top:6px;
   z-index:1000;
+  overflow-y:auto;
+  scrollbar-width:thin;
+  scrollbar-color: rgba(255,255,255,.5) transparent;
 }
+#inventory::-webkit-scrollbar { width:6px; }
+#inventory::-webkit-scrollbar-thumb { background:rgba(255,255,255,.5); border-radius:3px; }
 
 .inventory-item {
-  width:28px;
-  height:28px;
+  width:40px;
+  height:40px;
   border:2px solid white;
   cursor:pointer;
+  flex-shrink:0;
 }
 .selected { border-color:yellow }
-
-#color-select {
-  position:absolute;
-  top:40px;
-  left:50px;
-  z-index:1000;
-}
 
 #game {
   position:absolute;
   top:40px;
-  left:48px;
-  width:calc(100vw - 48px);
+  left:60px;
+  width:calc(100vw - 60px);
   height:calc(100vh - 40px);
 }
 
@@ -84,16 +83,6 @@ button {
   height:20px;
 }
 
-.grass { background:#4caf50 }
-.tallgrass { background:#3e8f44 }
-.water { background:#4aa3df }
-.sand { background:#e6d690 }
-.tree { background:#2f6f4e }
-.rock { background:#6b6b6b }
-.cactus { background:#6fbf73 }
-.cave { background:#2b2b2b }
-
-/* ENTITIES */
 #player, #mob {
   position:absolute;
   width:18px;
@@ -117,15 +106,19 @@ button {
   gap:6px;
   z-index:1000;
 }
-.touch-btn { background:rgba(255,255,255,.25); border-radius:8px; cursor:pointer; }
+.touch-btn { background:rgba(255,255,255,.25); border-radius:8px; touch-action:none; }
 .up{grid-column:2;grid-row:1}
 .left{grid-column:1;grid-row:2}
 .right{grid-column:3;grid-row:2}
 .down{grid-column:2;grid-row:3}
+
+@media(max-width:768px){
+  #top-buttons { flex-direction:column; top:auto; bottom:12px; right:12px; }
+}
 </style>
 </head>
-
 <body>
+
 <div id="title">Pixel Sandbox Deluxe</div>
 
 <div id="top-buttons">
@@ -136,20 +129,8 @@ button {
 </div>
 
 <div id="inventory"></div>
-<select id="color-select">
-  <option value="rainbow">Rainbow</option>
-  <option value="invisible">Invisible</option>
-  <option value="#ff0000">Red</option>
-  <option value="#00ff00">Green</option>
-  <option value="#0000ff">Blue</option>
-  <option value="#ffff00">Yellow</option>
-  <option value="#ff00ff">Magenta</option>
-  <option value="#00ffff">Cyan</option>
-  <option value="#ffffff">White</option>
-  <option value="#000000">Black</option>
-</select>
-
 <div id="game"></div>
+
 <div id="touch-controls">
   <div class="touch-btn up"></div>
   <div class="touch-btn left"></div>
@@ -162,10 +143,9 @@ button {
 <script>
 const game = document.getElementById('game');
 const inventory = document.getElementById('inventory');
-const colorSelect = document.getElementById('color-select');
 
 const tileSize = 20;
-const cols = Math.floor((innerWidth-48)/tileSize);
+const cols = Math.floor((innerWidth-60)/tileSize);
 const rows = Math.floor((innerHeight-40)/tileSize);
 
 let world = [];
@@ -174,8 +154,12 @@ let selectedTile = 'grass';
 /* ENTITIES */
 const player = document.createElement('div');
 player.id='player';
+game.appendChild(player);
+
 const mob = document.createElement('div');
 mob.id='mob';
+game.appendChild(mob);
+
 let px=Math.floor(cols/2), py=Math.floor(rows/2);
 let mx=Math.floor(Math.random()*cols), my=Math.floor(Math.random()*rows);
 
@@ -233,26 +217,28 @@ function drawWorld(){
   game.innerHTML='';
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
-      const t=document.createElement('div');
+      const t = document.createElement('div');
       t.className='tile';
-      t.style.left=x*tileSize+'px';
-      t.style.top=y*tileSize+'px';
+      t.style.left = x*tileSize+'px';
+      t.style.top = y*tileSize+'px';
 
       const val = world[y][x];
-      if(val==='rainbow'){
-        t.style.background='linear-gradient(45deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f)';
-      } else if(val==='invisible'){
-        t.style.background='transparent';
-      } else if(['grass','tallgrass','water','sand','tree','rock','cactus','cave'].includes(val)){
-        t.className='tile '+val;
-      } else {
-        t.style.background = val; // custom hex color
-      }
+      // natural tiles
+      if(val==='grass') t.style.background='#4caf50';
+      else if(val==='tallgrass') t.style.background='#3e8f44';
+      else if(val==='water') t.style.background='#4aa3df';
+      else if(val==='sand') t.style.background='#e6d690';
+      else if(val==='tree') t.style.background='#2f6f4e';
+      else if(val==='rock') t.style.background='#6b6b6b';
+      else if(val==='cactus') t.style.background='#6fbf73';
+      else if(val==='cave') t.style.background='#2b2b2b';
+      else if(val==='rainbow') t.style.background='linear-gradient(45deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f)';
+      else if(val==='invisible') t.style.background='transparent';
+      else t.style.background=val;
 
       game.appendChild(t);
     }
   }
-
   game.appendChild(player);
   game.appendChild(mob);
   updatePlayer();
@@ -295,9 +281,9 @@ game.onclick=e=>{
   const y=Math.floor((e.clientY-r.top)/tileSize);
   if(!inBounds(x,y)) return;
 
-  const val = colorSelect.value;
-  if(val==='invisible') world[y][x]='';
-  else world[y][x]=val;
+  world[y][x] = selectedTile==='rainbow'? 'rainbow' :
+                 selectedTile==='invisible'? 'invisible' :
+                 selectedTile;
 
   drawWorld();
   saveWorld();
@@ -334,30 +320,28 @@ function clearDoodle(){
 }
 
 /* INVENTORY */
-['grass','tallgrass','water','sand','tree','rock','cactus','cave'].forEach(type=>{
+const colors = ['grass','tallgrass','water','sand','tree','rock','cactus','cave','rainbow','invisible','#ff0000','#00ff00','#0000ff','#ffff00','#ff00ff','#00ffff','#ffffff','#000000'];
+colors.forEach(c=>{
   const i=document.createElement('div');
   i.className='inventory-item';
-  const dummy=document.createElement('div'); dummy.className=type; document.body.appendChild(dummy);
-  i.style.background=window.getComputedStyle(dummy).backgroundColor;
-  dummy.remove();
-  if(type===selectedTile) i.classList.add('selected');
+  if(c==='grass') i.style.background='#4caf50';
+  else if(c==='tallgrass') i.style.background='#3e8f44';
+  else if(c==='water') i.style.background='#4aa3df';
+  else if(c==='sand') i.style.background='#e6d690';
+  else if(c==='tree') i.style.background='#2f6f4e';
+  else if(c==='rock') i.style.background='#6b6b6b';
+  else if(c==='cactus') i.style.background='#6fbf73';
+  else if(c==='cave') i.style.background='#2b2b2b';
+  else if(c==='rainbow') i.style.background='linear-gradient(45deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f)';
+  else if(c==='invisible') i.style.background='transparent';
+  else i.style.background=c;
+
+  if(c===selectedTile) i.classList.add('selected');
   i.onclick=()=>{
     document.querySelectorAll('.inventory-item').forEach(e=>e.classList.remove('selected'));
     i.classList.add('selected');
-    selectedTile=type;
-    colorSelect.value=type;
+    selectedTile=c;
   };
-  inventory.appendChild(i);
-});
-
-/* INIT */
-const saved=localStorage.getItem('sandboxWorld');
-saved ? (world=JSON.parse(saved),drawWorld()) : generateWorld();
-</script>
-
-</body>
-</html>
-
   inventory.appendChild(i);
 });
 
