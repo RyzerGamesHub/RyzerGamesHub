@@ -154,8 +154,8 @@ const game = document.getElementById('game');
 const inventory = document.getElementById('inventory');
 
 const tileSize = 20;
-const cols = 100;
-const rows = 75;
+const cols = 10;
+const rows = 10;
 
 let world = [];
 let selectedTile = 'grass';
