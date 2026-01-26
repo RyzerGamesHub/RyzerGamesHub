@@ -76,6 +76,7 @@ button {
   width:calc(100vw - 60px);
   height:calc(100vh - 40px);
   overflow:hidden;
+  touch-action: none;
 }
 
 .tile {
@@ -132,9 +133,11 @@ button {
 <div id="title">Pixel Sandbox Deluxe</div>
 <div id="top-buttons">
   <button onclick="resetWorld()">Reset</button>
-  <button onclick="clearDoodle()">Clear Doodle</button>
+  <button onclick="clearDoodle()">Clear Page</button>
   <button onclick="downloadWorld()">Download</button>
   <button onclick="loadWorld()">Load</button>
+  <button id="togglePlayerBtn">Disable Player</button>
+  <button id="toggleMobsBtn">Disable Mobs</button>
 </div>
 <div id="inventory"></div>
 <div id="game"></div>
@@ -151,27 +154,30 @@ const game = document.getElementById('game');
 const inventory = document.getElementById('inventory');
 
 const tileSize = 20;
-const cols = 200;  // bigger world
+const cols = 200;
 const rows = 150;
 
 let world = [];
 let selectedTile = 'grass';
 
 /* ENTITIES */
+let playerEnabled = true;
 const player = document.createElement('div');
 player.id='player';
 game.appendChild(player);
 
+let mobsEnabled = true;
 const mobs = [];
 for(let i=0;i<5;i++){
   const m=document.createElement('div');
   m.className='mob';
-  m.innerText='🐰'; // small animal face
+  m.innerText='🐰';
   game.appendChild(m);
   mobs.push({el:m, x:rand(cols), y:rand(rows), dx:0, dy:0});
 }
 
 let px=Math.floor(cols/2), py=Math.floor(rows/2);
+let camX=0, camY=0; // camera for free zoom
 
 /* HELPERS */
 function inBounds(x,y){ return x>=0 && y>=0 && x<cols && y<rows }
@@ -190,42 +196,29 @@ function blob(cx,cy,r,type,allowed=['grass']){
 
 function generateWorld(){
   world = Array.from({length:rows},()=>Array(cols).fill('grass'));
-
   for(let i=0;i<4;i++) blob(rand(cols),rand(rows),rand(10,25),'water');
   for(let y=0;y<rows;y++){ for(let x=0;x<cols;x++){
     if(world[y][x]==='water'){
-      for(let dy=-1;dy<=1;dy++){
-        for(let dx=-1;dx<=1;dx++){
-          if(inBounds(x+dx,y+dy)&&world[y+dy][x+dx]==='grass') world[y+dy][x+dx]='sand';
-        }
-      }
+      for(let dy=-1;dy<=1;dy++){ for(let dx=-1;dx<=1;dx++){
+        if(inBounds(x+dx,y+dy)&&world[y+dy][x+dx]==='grass') world[y+dy][x+dx]='sand';
+      }}
     }
   }}
-
-  if(Math.random()<0.7){
-    const cx=rand(cols),cy=rand(rows);
-    blob(cx,cy,rand(12,20),'sand',['grass']);
-    blob(cx,cy,rand(5,10),'cactus',['sand']);
-  }
-
-  for(let i=0;i<5;i++) blob(rand(cols),rand(rows),rand(8,15),'tree',['grass']);
-  for(let y=0;y<rows;y++){ for(let x=0;x<cols;x++){
-    if(world[y][x]==='grass' && Math.random()<0.15) world[y][x]='tallgrass';
-  }}
-
-  if(Math.random()<0.25) blob(rand(cols),rand(rows),rand(6,10),'cave',['grass','dirt']);
   drawWorld();
   saveWorld();
 }
 
-/* DRAW */
+/* DRAW WORLD */
 function drawWorld(){
   game.innerHTML='';
 
   const viewportWidth = game.clientWidth;
   const viewportHeight = game.clientHeight;
-  const camX = Math.min(Math.max(px*tileSize - viewportWidth/2,0), cols*tileSize-viewportWidth);
-  const camY = Math.min(Math.max(py*tileSize - viewportHeight/2,0), rows*tileSize-viewportHeight);
+
+  if(playerEnabled){
+    camX = Math.min(Math.max(px*tileSize - viewportWidth/2,0), cols*tileSize-viewportWidth);
+    camY = Math.min(Math.max(py*tileSize - viewportHeight/2,0), rows*tileSize-viewportHeight);
+  }
 
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
@@ -249,37 +242,38 @@ function drawWorld(){
     }
   }
 
-  game.appendChild(player);
-  mobs.forEach(m=>game.appendChild(m.el));
+  if(playerEnabled) game.appendChild(player);
+  if(mobsEnabled) mobs.forEach(m=>game.appendChild(m.el));
+
   updatePlayer();
   updateMobs();
 }
 
 /* PLAYER */
 function updatePlayer(){
+  if(!playerEnabled) return;
   const viewportWidth = game.clientWidth;
   const viewportHeight = game.clientHeight;
-  const camX = Math.min(Math.max(px*tileSize - viewportWidth/2,0), cols*tileSize-viewportWidth);
-  const camY = Math.min(Math.max(py*tileSize - viewportHeight/2,0), rows*tileSize-viewportHeight);
   player.style.left=(px*tileSize-camX)+'px';
   player.style.top=(py*tileSize-camY)+'px';
 }
 
 function move(dx,dy){
-  px=Math.max(0,Math.min(cols-1,px+dx));
-  py=Math.max(0,Math.min(rows-1,py+dy));
+  if(playerEnabled){
+    px=Math.max(0,Math.min(cols-1,px+dx));
+    py=Math.max(0,Math.min(rows-1,py+dy));
+  } else {
+    camX-=dx*tileSize; camY-=dy*tileSize;
+    camX=Math.max(0,Math.min(camX, cols*tileSize-game.clientWidth));
+    camY=Math.max(0,Math.min(camY, rows*tileSize-game.clientHeight));
+  }
   drawWorld();
 }
 
 /* MOBS */
 function updateMobs(){
-  const viewportWidth = game.clientWidth;
-  const viewportHeight = game.clientHeight;
-  const camX = Math.min(Math.max(px*tileSize - viewportWidth/2,0), cols*tileSize-viewportWidth);
-  const camY = Math.min(Math.max(py*tileSize - viewportHeight/2,0), rows*tileSize-viewportHeight);
-
+  if(!mobsEnabled) return;
   mobs.forEach(m=>{
-    // random smooth motion
     if(Math.random()<0.02){ m.dx=rand(3)-1; m.dy=rand(3)-1; }
     m.x=Math.max(0,Math.min(cols-1,m.x+m.dx));
     m.y=Math.max(0,Math.min(rows-1,m.y+m.dy));
@@ -288,10 +282,7 @@ function updateMobs(){
   });
 }
 
-function gameLoop(){
-  requestAnimationFrame(gameLoop);
-  updateMobs();
-}
+function gameLoop(){ requestAnimationFrame(gameLoop); updateMobs(); }
 gameLoop();
 
 /* INPUT */
@@ -309,8 +300,8 @@ document.querySelector('.right').ontouchstart=()=>move(1,0);
 /* BUILD / DOODLE */
 game.onclick=e=>{
   const r=game.getBoundingClientRect();
-  const x=Math.floor((e.clientX-r.left)/tileSize + px - Math.floor(game.clientWidth/2/tileSize));
-  const y=Math.floor((e.clientY-r.top)/tileSize + py - Math.floor(game.clientHeight/2/tileSize));
+  const x=Math.floor((e.clientX-r.left)/tileSize + camX/tileSize);
+  const y=Math.floor((e.clientY-r.top)/tileSize + camY/tileSize);
   if(!inBounds(x,y)) return;
   world[y][x]=selectedTile==='rainbow'?'rainbow':
                selectedTile==='invisible'?'invisible':
@@ -336,18 +327,23 @@ fileInput.onchange=e=>{
   r.readAsText(e.target.files[0]);
 }
 
-/* CLEAR DOODLE */
+/* CLEAR DOODLE - Blank white page */
 function clearDoodle(){
-  for(let y=0;y<rows;y++){
-    for(let x=0;x<cols;x++){
-      if(!['grass','tallgrass','water','sand','tree','rock','cactus','cave'].includes(world[y][x])){
-        world[y][x]='grass';
-      }
-    }
-  }
+  world = Array.from({length:rows},()=>Array(cols).fill('invisible'));
   drawWorld();
-  saveWorld();
 }
+
+/* TOGGLE PLAYER / MOBS */
+document.getElementById('togglePlayerBtn').onclick=()=>{
+  playerEnabled=!playerEnabled;
+  document.getElementById('togglePlayerBtn').innerText=playerEnabled?'Disable Player':'Enable Player';
+  drawWorld();
+};
+document.getElementById('toggleMobsBtn').onclick=()=>{
+  mobsEnabled=!mobsEnabled;
+  document.getElementById('toggleMobsBtn').innerText=mobsEnabled?'Disable Mobs':'Enable Mobs';
+  drawWorld();
+};
 
 /* INVENTORY */
 const colors = ['grass','tallgrass','water','sand','tree','rock','cactus','cave','rainbow','invisible','#ff0000','#00ff00','#0000ff','#ffff00','#ff00ff','#00ffff','#ffffff','#000000'];
@@ -365,7 +361,6 @@ colors.forEach(c=>{
   else if(c==='rainbow') i.style.background='linear-gradient(45deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f)';
   else if(c==='invisible') i.style.background='transparent';
   else i.style.background=c;
-
   if(c===selectedTile) i.classList.add('selected');
   i.onclick=()=>{
     document.querySelectorAll('.inventory-item').forEach(e=>e.classList.remove('selected'));
