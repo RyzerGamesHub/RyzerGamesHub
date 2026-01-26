@@ -37,6 +37,7 @@ button {
   padding:4px 8px;
   border:none;
   background:rgba(255,255,255,.9);
+  cursor:pointer;
 }
 
 #inventory {
@@ -116,7 +117,7 @@ button {
   gap:6px;
   z-index:1000;
 }
-.touch-btn { background:rgba(255,255,255,.25); border-radius:8px }
+.touch-btn { background:rgba(255,255,255,.25); border-radius:8px; cursor:pointer; }
 .up{grid-column:2;grid-row:1}
 .left{grid-column:1;grid-row:2}
 .right{grid-column:3;grid-row:2}
@@ -233,9 +234,21 @@ function drawWorld(){
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
       const t=document.createElement('div');
-      t.className='tile '+world[y][x];
+      t.className='tile';
       t.style.left=x*tileSize+'px';
       t.style.top=y*tileSize+'px';
+
+      const val = world[y][x];
+      if(val==='rainbow'){
+        t.style.background='linear-gradient(45deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f)';
+      } else if(val==='invisible'){
+        t.style.background='transparent';
+      } else if(['grass','tallgrass','water','sand','tree','rock','cactus','cave'].includes(val)){
+        t.className='tile '+val;
+      } else {
+        t.style.background = val; // custom hex color
+      }
+
       game.appendChild(t);
     }
   }
@@ -284,7 +297,6 @@ game.onclick=e=>{
 
   const val = colorSelect.value;
   if(val==='invisible') world[y][x]='';
-  else if(val==='rainbow') world[y][x]='rainbow';
   else world[y][x]=val;
 
   drawWorld();
@@ -325,8 +337,9 @@ function clearDoodle(){
 ['grass','tallgrass','water','sand','tree','rock','cactus','cave'].forEach(type=>{
   const i=document.createElement('div');
   i.className='inventory-item';
-  i.style.background=window.getComputedStyle(document.body.appendChild(Object.assign(document.createElement('div'),{className:type}))).backgroundColor;
-  document.body.lastChild.remove();
+  const dummy=document.createElement('div'); dummy.className=type; document.body.appendChild(dummy);
+  i.style.background=window.getComputedStyle(dummy).backgroundColor;
+  dummy.remove();
   if(type===selectedTile) i.classList.add('selected');
   i.onclick=()=>{
     document.querySelectorAll('.inventory-item').forEach(e=>e.classList.remove('selected'));
