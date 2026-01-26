@@ -75,16 +75,13 @@ button {
   height:20px;
 }
 
-/* BIOME COLORS */
+/* BIOMES */
 .grass { background:#4caf50 }
 .tallgrass { background:#3e8f44 }
 .water { background:#4aa3df }
 .sand { background:#e6d690 }
 .tree { background:#2f6f4e }
 .rock { background:#6b6b6b }
-.flower { background:#e58bb6 }
-.dirt { background:#8b5a2b }
-.lava { background:#d84315 }
 .cactus { background:#6fbf73 }
 .cave { background:#2b2b2b }
 
@@ -93,8 +90,10 @@ button {
   width:18px;
   height:18px;
   border-radius:2px;
+  z-index:10;
 }
-#player { background:orange; z-index:10 }
+
+#player { background:orange }
 #mob { background:crimson; z-index:9 }
 
 #touch-controls {
@@ -109,6 +108,7 @@ button {
   gap:6px;
   z-index:1000;
 }
+
 .touch-btn { background:rgba(255,255,255,.25); border-radius:8px }
 .up{grid-column:2;grid-row:1}
 .left{grid-column:1;grid-row:2}
@@ -142,47 +142,44 @@ button {
 <script>
 const game = document.getElementById('game');
 const inventory = document.getElementById('inventory');
+
 const tileSize = 20;
-const cols = Math.floor((innerWidth-48)/tileSize);
-const rows = Math.floor((innerHeight-40)/tileSize);
+const cols = Math.floor((innerWidth - 48) / tileSize);
+const rows = Math.floor((innerHeight - 40) / tileSize);
 
-const tiles = [];
-const tileTypes = ['grass','tallgrass','water','sand','tree','rock','cactus','cave','dirt','lava'];
-const colors = {
-  grass:'#4caf50', tallgrass:'#3e8f44', water:'#4aa3df',
-  sand:'#e6d690', tree:'#2f6f4e', rock:'#6b6b6b',
-  cactus:'#6fbf73', cave:'#2b2b2b',
-  dirt:'#8b5a2b', lava:'#d84315'
-};
-
+let world = [];
 let selectedTile = 'grass';
 
-/* WORLD DATA */
-let world = Array.from({length:rows},()=>Array(cols).fill('grass'));
+/* ENTITIES */
+const player = document.createElement('div');
+player.id = 'player';
 
-/* BIOME HELPERS */
+const mob = document.createElement('div');
+mob.id = 'mob';
+
+let px = Math.floor(cols/2), py = Math.floor(rows/2);
+let mx = Math.floor(Math.random()*cols), my = Math.floor(Math.random()*rows);
+
+/* HELPERS */
 function inBounds(x,y){ return x>=0&&y>=0&&x<cols&&y<rows }
+function rand(max,min=0){ return Math.floor(Math.random()*(max-min))+min }
 
-function blob(cx,cy,radius,type){
-  for(let y=-radius;y<=radius;y++){
-    for(let x=-radius;x<=radius;x++){
-      if(Math.hypot(x,y)<=radius && inBounds(cx+x,cy+y)){
+/* WORLD GEN */
+function blob(cx,cy,r,type){
+  for(let y=-r;y<=r;y++){
+    for(let x=-r;x<=r;x++){
+      if(Math.hypot(x,y)<=r && inBounds(cx+x,cy+y)){
         world[cy+y][cx+x]=type;
       }
     }
   }
 }
 
-/* GENERATION */
 function generateWorld(){
   world = Array.from({length:rows},()=>Array(cols).fill('grass'));
 
-  /* lakes */
-  for(let i=0;i<4;i++){
-    blob(rand(cols),rand(rows),rand(10,25),'water');
-  }
+  for(let i=0;i<4;i++) blob(rand(cols),rand(rows),rand(10,25),'water');
 
-  /* sand around water */
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
       if(world[y][x]==='water'){
@@ -197,12 +194,8 @@ function generateWorld(){
     }
   }
 
-  /* forests */
-  for(let i=0;i<5;i++){
-    blob(rand(cols),rand(rows),rand(8,15),'tree');
-  }
+  for(let i=0;i<5;i++) blob(rand(cols),rand(rows),rand(8,15),'tree');
 
-  /* tall grass */
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
       if(world[y][x]==='grass' && Math.random()<0.15){
@@ -211,36 +204,93 @@ function generateWorld(){
     }
   }
 
-  /* desert */
   if(Math.random()<0.7){
     const cx=rand(cols), cy=rand(rows);
     blob(cx,cy,rand(12,20),'sand');
     blob(cx,cy,rand(5,10),'cactus');
   }
 
-  /* lucky cave */
   if(Math.random()<0.25){
     blob(rand(cols),rand(rows),rand(6,10),'cave');
   }
+
+  px = Math.floor(cols/2);
+  py = Math.floor(rows/2);
+  mx = rand(cols);
+  my = rand(rows);
 
   drawWorld();
   saveWorld();
 }
 
+/* DRAW */
 function drawWorld(){
-  game.innerHTML='';
-  tiles.length=0;
+  game.innerHTML = '';
+
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
-      const t=document.createElement('div');
-      t.className='tile '+world[y][x];
-      t.style.left=x*tileSize+'px';
-      t.style.top=y*tileSize+'px';
+      const t = document.createElement('div');
+      t.className = 'tile ' + world[y][x];
+      t.style.left = x*tileSize+'px';
+      t.style.top = y*tileSize+'px';
       game.appendChild(t);
-      tiles.push({x,y,el:t});
     }
   }
+
+  game.appendChild(player);
+  game.appendChild(mob);
+  updatePlayer();
+  updateMob();
 }
+
+/* PLAYER */
+function updatePlayer(){
+  player.style.left = px*tileSize+1+'px';
+  player.style.top  = py*tileSize+1+'px';
+}
+
+function move(dx,dy){
+  px = Math.max(0,Math.min(cols-1,px+dx));
+  py = Math.max(0,Math.min(rows-1,py+dy));
+  updatePlayer();
+}
+
+/* MOB */
+function updateMob(){
+  mob.style.left = mx*tileSize+1+'px';
+  mob.style.top  = my*tileSize+1+'px';
+}
+
+setInterval(()=>{
+  mx += rand(2,-1);
+  my += rand(2,-1);
+  mx = Math.max(0,Math.min(cols-1,mx));
+  my = Math.max(0,Math.min(rows-1,my));
+  updateMob();
+},500);
+
+/* INPUT */
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowUp')move(0,-1);
+  if(e.key==='ArrowDown')move(0,1);
+  if(e.key==='ArrowLeft')move(-1,0);
+  if(e.key==='ArrowRight')move(1,0);
+});
+
+document.querySelector('.up').ontouchstart=()=>move(0,-1);
+document.querySelector('.down').ontouchstart=()=>move(0,1);
+document.querySelector('.left').ontouchstart=()=>move(-1,0);
+document.querySelector('.right').ontouchstart=()=>move(1,0);
+
+/* BUILD */
+game.onclick=e=>{
+  const r=game.getBoundingClientRect();
+  const x=Math.floor((e.clientX-r.left)/tileSize);
+  const y=Math.floor((e.clientY-r.top)/tileSize);
+  if(!inBounds(x,y))return;
+  world[y][x]=world[y][x]!=='grass'?'grass':selectedTile;
+  drawWorld(); saveWorld();
+};
 
 /* SAVE / LOAD */
 function saveWorld(){
@@ -266,36 +316,16 @@ fileInput.onchange=e=>{
   r.readAsText(e.target.files[0]);
 };
 
-/* PLAYER */
-const player=document.createElement('div');
-player.id='player';
-game.appendChild(player);
-let px=Math.floor(cols/2), py=Math.floor(rows/2);
-function move(dx,dy){
-  px=Math.max(0,Math.min(cols-1,px+dx));
-  py=Math.max(0,Math.min(rows-1,py+dy));
-  player.style.left=px*tileSize+1+'px';
-  player.style.top=py*tileSize+1+'px';
-}
-move(0,0);
-
-document.addEventListener('keydown',e=>{
-  if(e.key==='ArrowUp')move(0,-1);
-  if(e.key==='ArrowDown')move(0,1);
-  if(e.key==='ArrowLeft')move(-1,0);
-  if(e.key==='ArrowRight')move(1,0);
-});
-
-document.querySelector('.up').ontouchstart=()=>move(0,-1);
-document.querySelector('.down').ontouchstart=()=>move(0,1);
-document.querySelector('.left').ontouchstart=()=>move(-1,0);
-document.querySelector('.right').ontouchstart=()=>move(1,0);
-
 /* INVENTORY */
-tileTypes.forEach(type=>{
+['grass','tallgrass','water','sand','tree','rock','cactus','cave'].forEach(type=>{
   const i=document.createElement('div');
   i.className='inventory-item';
-  i.style.background=colors[type];
+  i.style.background=getComputedStyle(document.createElement('div')).background;
+  i.style.backgroundColor='';
+  i.style.background='';
+  i.style.background=window.getComputedStyle(document.body.appendChild(Object.assign(document.createElement('div'),{className:type}))).backgroundColor;
+  document.body.lastChild.remove();
+
   if(type===selectedTile)i.classList.add('selected');
   i.onclick=()=>{
     document.querySelectorAll('.inventory-item').forEach(e=>e.classList.remove('selected'));
@@ -305,23 +335,12 @@ tileTypes.forEach(type=>{
   inventory.appendChild(i);
 });
 
-/* CLICK BUILD */
-game.onclick=e=>{
-  const r=game.getBoundingClientRect();
-  const x=Math.floor((e.clientX-r.left)/tileSize);
-  const y=Math.floor((e.clientY-r.top)/tileSize);
-  if(!inBounds(x,y))return;
-  world[y][x]=world[y][x]!=='grass'?'grass':selectedTile;
-  drawWorld(); saveWorld();
-};
-
 /* INIT */
 const saved=localStorage.getItem('sandboxWorld');
-saved? (world=JSON.parse(saved),drawWorld()) : generateWorld();
-
-function rand(max,min=0){ return Math.floor(Math.random()*(max-min))+min }
+saved ? (world=JSON.parse(saved),drawWorld()) : generateWorld();
 </script>
 
 </body>
 </html>
+
 
