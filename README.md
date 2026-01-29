@@ -163,9 +163,6 @@
     <div class="touch-btn down"></div>
   </div>
 
-</body>
-</html>
-
 <script>
 /* =========================
    WORLD CONFIG
@@ -414,3 +411,5 @@ window.addEventListener('mousemove', e => {
 ========================= */
 render();
 </script>
+</body>
+</html>
