@@ -298,3 +298,119 @@ if (!loadWorldFromStorage()) {
   generateWorld();
 }
 </script>
+
+<script>
+/* =========================
+   CANVAS SETUP
+========================= */
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+document.body.appendChild(canvas);
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+/* =========================
+   CAMERA
+========================= */
+const camera = {
+  x: 0,
+  y: 0,
+  speed: 1
+};
+
+function clampCamera() {
+  camera.x = Math.max(
+    0,
+    Math.min(camera.x, cols * tileSize - canvas.width)
+  );
+  camera.y = Math.max(
+    0,
+    Math.min(camera.y, rows * tileSize - canvas.height)
+  );
+}
+
+/* =========================
+   TILE COLORS
+========================= */
+const tileColors = {
+  grass: '#3cb043',
+  tallgrass: '#2f8f3a',
+  water: '#2b65ec',
+  sand: '#e2c290',
+  tree: '#1f6b2d',
+  cactus: '#3a8f3a',
+  cave: '#444',
+  '#ffffff': '#ffffff'
+};
+
+/* =========================
+   RENDERING
+========================= */
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const startX = Math.floor(camera.x / tileSize);
+  const startY = Math.floor(camera.y / tileSize);
+  const endX = startX + Math.ceil(canvas.width / tileSize) + 1;
+  const endY = startY + Math.ceil(canvas.height / tileSize) + 1;
+
+  for (let y = startY; y < endY; y++) {
+    for (let x = startX; x < endX; x++) {
+      if (!inBounds(x, y)) continue;
+
+      const tile = world[y][x];
+      ctx.fillStyle = tileColors[tile] || '#000';
+
+      ctx.fillRect(
+        x * tileSize - camera.x,
+        y * tileSize - camera.y,
+        tileSize,
+        tileSize
+      );
+    }
+  }
+
+  requestAnimationFrame(render);
+}
+
+/* =========================
+   CAMERA DRAG (MOUSE)
+========================= */
+let dragging = false;
+let lastMouse = { x: 0, y: 0 };
+
+canvas.addEventListener('mousedown', e => {
+  dragging = true;
+  lastMouse.x = e.clientX;
+  lastMouse.y = e.clientY;
+});
+
+window.addEventListener('mouseup', () => {
+  dragging = false;
+});
+
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+
+  const dx = e.clientX - lastMouse.x;
+  const dy = e.clientY - lastMouse.y;
+
+  camera.x -= dx * camera.speed;
+  camera.y -= dy * camera.speed;
+
+  clampCamera();
+
+  lastMouse.x = e.clientX;
+  lastMouse.y = e.clientY;
+});
+
+/* =========================
+   START
+========================= */
+render();
+</script>
