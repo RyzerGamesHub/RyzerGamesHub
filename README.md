@@ -166,17 +166,6 @@
 </body>
 </html>
 
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: #000;
-}
-</style>
-
 <script>
 /* =========================
    WORLD CONFIG
@@ -316,11 +305,13 @@ if (!loadWorldFromStorage()) {
 ========================= */
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
-document.body.appendChild(canvas);
+const gameContainer = document.getElementById('game');
+gameContainer.appendChild(canvas);
+
 
 function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width = gameContainer.clientWidth;
+  canvas.height = gameContainer.clientHeight;
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
