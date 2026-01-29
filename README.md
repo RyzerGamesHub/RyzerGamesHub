@@ -641,7 +641,8 @@ function drawPlayer() {
 
 <script>
 
-  /* =========================
+ <script>
+/* =========================
    PROPER CAMERA ZOOM
 ========================= */
 let zoom = 1;
@@ -682,7 +683,6 @@ render = function () {
 
   ctx.restore();
 };
-</script>
 
 
 /* =========================
