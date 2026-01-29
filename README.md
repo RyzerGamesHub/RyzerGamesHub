@@ -651,9 +651,6 @@ render = function () {
 </script>
 
 <script>
-/* =========================
-   ZOOM SYSTEM
-========================= */
 let zoom = 1;
 const zoomMin = 0.5;
 const zoomMax = 2;
@@ -664,18 +661,14 @@ canvas.addEventListener('wheel', e => {
   zoom = Math.max(zoomMin, Math.min(zoomMax, zoom));
 }, { passive: false });
 
-/* =========================
-   PATCH RENDER FOR ZOOM
-========================= */
 const baseRender = render;
 render = function () {
   ctx.save();
   ctx.scale(zoom, zoom);
-
   baseRender();
-
   ctx.restore();
 };
+
 
 /* =========================
    MINIMAP
