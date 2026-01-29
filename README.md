@@ -538,3 +538,114 @@ render = function () {
   drawHUD();
 };
 </script>
+<script>
+/* =========================
+   PLAYER CONFIG
+========================= */
+const player = {
+  x: cols * tileSize / 2,
+  y: rows * tileSize / 2,
+  w: tileSize * 0.6,
+  h: tileSize * 0.6,
+  speed: 3
+};
+
+const keys = {};
+
+/* =========================
+   SOLID TILES
+========================= */
+const solidTiles = new Set([
+  'water',
+  'tree',
+  'cactus',
+  'cave'
+]);
+
+function isSolid(x, y) {
+  if (!inBounds(x, y)) return true;
+  return solidTiles.has(world[y][x]);
+}
+
+/* =========================
+   INPUT
+========================= */
+window.addEventListener('keydown', e => {
+  keys[e.key.toLowerCase()] = true;
+});
+
+window.addEventListener('keyup', e => {
+  keys[e.key.toLowerCase()] = false;
+});
+
+/* =========================
+   COLLISION
+========================= */
+function canMove(nx, ny) {
+  const left = Math.floor(nx / tileSize);
+  const right = Math.floor((nx + player.w) / tileSize);
+  const top = Math.floor(ny / tileSize);
+  const bottom = Math.floor((ny + player.h) / tileSize);
+
+  for (let y = top; y <= bottom; y++) {
+    for (let x = left; x <= right; x++) {
+      if (isSolid(x, y)) return false;
+    }
+  }
+  return true;
+}
+
+/* =========================
+   UPDATE LOOP
+========================= */
+function updatePlayer() {
+  let dx = 0;
+  let dy = 0;
+
+  if (keys['w'] || keys['arrowup']) dy -= player.speed;
+  if (keys['s'] || keys['arrowdown']) dy += player.speed;
+  if (keys['a'] || keys['arrowleft']) dx -= player.speed;
+  if (keys['d'] || keys['arrowright']) dx += player.speed;
+
+  // Normalize diagonal movement
+  if (dx && dy) {
+    dx *= 0.707;
+    dy *= 0.707;
+  }
+
+  if (canMove(player.x + dx, player.y)) {
+    player.x += dx;
+  }
+  if (canMove(player.x, player.y + dy)) {
+    player.y += dy;
+  }
+
+  // Camera follows
+  camera.x = player.x - canvas.width / 2 + player.w / 2;
+  camera.y = player.y - canvas.height / 2 + player.h / 2;
+  clampCamera();
+}
+
+/* =========================
+   DRAW PLAYER
+========================= */
+function drawPlayer() {
+  ctx.fillStyle = '#ffcc66';
+  ctx.fillRect(
+    player.x - camera.x,
+    player.y - camera.y,
+    player.w,
+    player.h
+  );
+}
+
+/* =========================
+   INJECT INTO RENDER
+========================= */
+const prevRender = render;
+render = function () {
+  updatePlayer();
+  prevRender();
+  drawPlayer();
+};
+</script>
