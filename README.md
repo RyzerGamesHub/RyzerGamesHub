@@ -638,10 +638,9 @@ function drawPlayer() {
     player.h
   );
 }
-
 <script>
 
- <script>
+<script>
 /* =========================
    PROPER CAMERA ZOOM
 ========================= */
@@ -683,7 +682,6 @@ render = function () {
 
   ctx.restore();
 };
-
 
 /* =========================
    MINIMAP
