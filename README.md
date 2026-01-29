@@ -639,35 +639,50 @@ function drawPlayer() {
   );
 }
 
-/* =========================
-   INJECT INTO RENDER
-========================= */
-const prevRender = render;
-render = function () {
-  updatePlayer();
-  prevRender();
-  drawPlayer();
-};
-</script>
-
 <script>
+
+  /* =========================
+   PROPER CAMERA ZOOM
+========================= */
 let zoom = 1;
-const zoomMin = 0.5;
-const zoomMax = 2;
+const zoomMin = 0.6;
+const zoomMax = 2.2;
+const zoomSpeed = 0.0015;
 
 canvas.addEventListener('wheel', e => {
   e.preventDefault();
-  zoom += e.deltaY * -0.001;
+
+  const prevZoom = zoom;
+  zoom -= e.deltaY * zoomSpeed;
   zoom = Math.max(zoomMin, Math.min(zoomMax, zoom));
+
+  // Keep zoom centered on screen
+  const cx = camera.x + canvas.width / 2 / prevZoom;
+  const cy = camera.y + canvas.height / 2 / prevZoom;
+
+  camera.x = cx - canvas.width / 2 / zoom;
+  camera.y = cy - canvas.height / 2 / zoom;
+
+  clampCamera();
 }, { passive: false });
 
-const baseRender = render;
+/* =========================
+   PATCH RENDER (CENTERED)
+========================= */
+const renderBeforeZoom = render;
 render = function () {
   ctx.save();
+
+  // Move origin to screen center
+  ctx.translate(canvas.width / 2, canvas.height / 2);
   ctx.scale(zoom, zoom);
-  baseRender();
+  ctx.translate(-canvas.width / 2, -canvas.height / 2);
+
+  renderBeforeZoom();
+
   ctx.restore();
 };
+</script>
 
 
 /* =========================
