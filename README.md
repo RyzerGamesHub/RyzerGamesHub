@@ -416,3 +416,72 @@ window.addEventListener('mousemove', e => {
 ========================= */
 render();
 </script>
+
+<script>
+/* =========================
+   TILE PALETTE UI
+========================= */
+const palette = document.createElement('div');
+palette.style.position = 'fixed';
+palette.style.bottom = '10px';
+palette.style.left = '50%';
+palette.style.transform = 'translateX(-50%)';
+palette.style.display = 'flex';
+palette.style.gap = '6px';
+palette.style.padding = '8px';
+palette.style.background = 'rgba(0,0,0,0.6)';
+palette.style.borderRadius = '10px';
+palette.style.zIndex = '10';
+document.body.appendChild(palette);
+
+const tileTypes = Object.keys(tileColors).filter(t => t !== '#ffffff');
+
+tileTypes.forEach(type => {
+  const btn = document.createElement('div');
+  btn.style.width = '28px';
+  btn.style.height = '28px';
+  btn.style.cursor = 'pointer';
+  btn.style.borderRadius = '4px';
+  btn.style.background = tileColors[type];
+  btn.title = type;
+
+  btn.onclick = () => {
+    selectedTile = type;
+    [...palette.children].forEach(b => b.style.outline = 'none');
+    btn.style.outline = '2px solid white';
+  };
+
+  palette.appendChild(btn);
+});
+
+// select default
+palette.children[0].click();
+
+/* =========================
+   TILE EDITING
+========================= */
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+canvas.addEventListener('mousedown', e => {
+  if (dragging) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left + camera.x;
+  const my = e.clientY - rect.top + camera.y;
+
+  const tx = Math.floor(mx / tileSize);
+  const ty = Math.floor(my / tileSize);
+
+  if (!inBounds(tx, ty)) return;
+
+  if (e.button === 0) {
+    world[ty][tx] = selectedTile;
+  }
+
+  if (e.button === 2) {
+    world[ty][tx] = 'grass';
+  }
+
+  saveWorld();
+});
+</script>
