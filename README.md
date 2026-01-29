@@ -163,6 +163,9 @@
     <div class="touch-btn down"></div>
   </div>
 
+</body>
+</html>
+
 <style>
 html, body {
   margin: 0;
@@ -422,5 +425,3 @@ window.addEventListener('mousemove', e => {
 ========================= */
 render();
 </script>
-</body>
-</html>
