@@ -419,69 +419,122 @@ render();
 
 <script>
 /* =========================
-   TILE PALETTE UI
+   TILE PALETTE
 ========================= */
 const palette = document.createElement('div');
 palette.style.position = 'fixed';
+palette.style.left = '10px';
 palette.style.bottom = '10px';
-palette.style.left = '50%';
-palette.style.transform = 'translateX(-50%)';
+palette.style.background = '#111';
+palette.style.padding = '8px';
+palette.style.borderRadius = '8px';
 palette.style.display = 'flex';
 palette.style.gap = '6px';
-palette.style.padding = '8px';
-palette.style.background = 'rgba(0,0,0,0.6)';
-palette.style.borderRadius = '10px';
-palette.style.zIndex = '10';
+palette.style.zIndex = 10;
 document.body.appendChild(palette);
 
-const tileTypes = Object.keys(tileColors).filter(t => t !== '#ffffff');
+const tiles = [
+  'grass',
+  'tallgrass',
+  'water',
+  'sand',
+  'tree',
+  'cactus',
+  'cave'
+];
 
-tileTypes.forEach(type => {
-  const btn = document.createElement('div');
-  btn.style.width = '28px';
-  btn.style.height = '28px';
-  btn.style.cursor = 'pointer';
-  btn.style.borderRadius = '4px';
-  btn.style.background = tileColors[type];
-  btn.title = type;
+function rebuildPalette() {
+  palette.innerHTML = '';
+  tiles.forEach(t => {
+    const btn = document.createElement('div');
+    btn.style.width = '24px';
+    btn.style.height = '24px';
+    btn.style.background = tileColors[t];
+    btn.style.border =
+      selectedTile === t ? '2px solid white' : '2px solid #000';
+    btn.style.cursor = 'pointer';
 
-  btn.onclick = () => {
-    selectedTile = type;
-    [...palette.children].forEach(b => b.style.outline = 'none');
-    btn.style.outline = '2px solid white';
-  };
+    btn.onclick = () => {
+      selectedTile = t;
+      rebuildPalette();
+    };
 
-  palette.appendChild(btn);
-});
+    palette.appendChild(btn);
+  });
+}
 
-// select default
-palette.children[0].click();
+rebuildPalette();
 
 /* =========================
    TILE EDITING
 ========================= */
+function screenToWorld(x, y) {
+  return {
+    x: Math.floor((x + camera.x) / tileSize),
+    y: Math.floor((y + camera.y) / tileSize)
+  };
+}
+
+let painting = false;
+
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
 canvas.addEventListener('mousedown', e => {
-  if (dragging) return;
-
-  const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left + camera.x;
-  const my = e.clientY - rect.top + camera.y;
-
-  const tx = Math.floor(mx / tileSize);
-  const ty = Math.floor(my / tileSize);
-
-  if (!inBounds(tx, ty)) return;
-
-  if (e.button === 0) {
-    world[ty][tx] = selectedTile;
+  if (e.button === 0 || e.button === 2) {
+    painting = true;
+    paintTile(e);
   }
-
-  if (e.button === 2) {
-    world[ty][tx] = 'grass';
-  }
-
-  saveWorld();
 });
+
+window.addEventListener('mouseup', () => {
+  if (painting) saveWorld();
+  painting = false;
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (painting) paintTile(e);
+});
+
+function paintTile(e) {
+  const { x, y } = screenToWorld(e.clientX, e.clientY);
+  if (!inBounds(x, y)) return;
+
+  if (e.buttons === 2) {
+    world[y][x] = 'grass';
+  } else {
+    world[y][x] = selectedTile;
+  }
+}
+
+/* =========================
+   KEYBOARD SHORTCUTS
+========================= */
+window.addEventListener('keydown', e => {
+  if (e.key === 'r') {
+    resetWorld();
+  }
+  if (e.key === 'c') {
+    clearWorld();
+  }
+});
+
+/* =========================
+   HUD TEXT
+========================= */
+function drawHUD() {
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(10, 10, 210, 52);
+
+  ctx.fillStyle = '#fff';
+  ctx.font = '14px monospace';
+  ctx.fillText(`Tile: ${selectedTile}`, 20, 30);
+  ctx.fillText(`R = reset | C = clear`, 20, 48);
+}
+
+/* inject HUD into render loop */
+const oldRender = render;
+render = function () {
+  oldRender();
+  drawHUD();
+};
 </script>
