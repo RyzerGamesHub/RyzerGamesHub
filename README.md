@@ -649,3 +649,82 @@ render = function () {
   drawPlayer();
 };
 </script>
+
+<script>
+/* =========================
+   ZOOM SYSTEM
+========================= */
+let zoom = 1;
+const zoomMin = 0.5;
+const zoomMax = 2;
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoom += e.deltaY * -0.001;
+  zoom = Math.max(zoomMin, Math.min(zoomMax, zoom));
+}, { passive: false });
+
+/* =========================
+   PATCH RENDER FOR ZOOM
+========================= */
+const baseRender = render;
+render = function () {
+  ctx.save();
+  ctx.scale(zoom, zoom);
+
+  baseRender();
+
+  ctx.restore();
+};
+
+/* =========================
+   MINIMAP
+========================= */
+const minimap = {
+  size: 160,
+  padding: 10
+};
+
+function drawMinimap() {
+  const scaleX = minimap.size / (cols * tileSize);
+  const scaleY = minimap.size / (rows * tileSize);
+
+  const x = canvas.width - minimap.size - minimap.padding;
+  const y = minimap.padding;
+
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(x - 4, y - 4, minimap.size + 8, minimap.size + 8);
+
+  for (let ty = 0; ty < rows; ty += 4) {
+    for (let tx = 0; tx < cols; tx += 4) {
+      const tile = world[ty][tx];
+      ctx.fillStyle = tileColors[tile] || '#000';
+
+      ctx.fillRect(
+        x + tx * tileSize * scaleX,
+        y + ty * tileSize * scaleY,
+        3,
+        3
+      );
+    }
+  }
+
+  // Player dot
+  ctx.fillStyle = '#ffcc66';
+  ctx.fillRect(
+    x + player.x * scaleX,
+    y + player.y * scaleY,
+    4,
+    4
+  );
+}
+
+/* =========================
+   INJECT MINIMAP
+========================= */
+const renderWithMinimap = render;
+render = function () {
+  renderWithMinimap();
+  drawMinimap();
+};
+</script>
