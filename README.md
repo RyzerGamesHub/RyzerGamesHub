@@ -165,3 +165,136 @@
 
 </body>
 </html>
+
+<script>
+/* =========================
+   WORLD CONFIG
+========================= */
+const tileSize = 20;
+const cols = 200;
+const rows = 150;
+
+let world = [];
+let selectedTile = 'grass';
+
+/* =========================
+   HELPERS
+========================= */
+function rand(max, min = 0) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function inBounds(x, y) {
+  return x >= 0 && y >= 0 && x < cols && y < rows;
+}
+
+/* =========================
+   WORLD GENERATION
+========================= */
+function blob(cx, cy, r, type, allowed = ['grass']) {
+  for (let y = -r; y <= r; y++) {
+    for (let x = -r; x <= r; x++) {
+      if (Math.hypot(x, y) <= r) {
+        const nx = cx + x;
+        const ny = cy + y;
+        if (inBounds(nx, ny) && allowed.includes(world[ny][nx])) {
+          world[ny][nx] = type;
+        }
+      }
+    }
+  }
+}
+
+function generateWorld() {
+  world = Array.from({ length: rows }, () =>
+    Array(cols).fill('grass')
+  );
+
+  // Water blobs
+  for (let i = 0; i < 4; i++) {
+    blob(rand(cols), rand(rows), rand(10, 25), 'water');
+  }
+
+  // Sand around water
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      if (world[y][x] === 'water') {
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (
+              inBounds(x + dx, y + dy) &&
+              world[y + dy][x + dx] === 'grass'
+            ) {
+              world[y + dy][x + dx] = 'sand';
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Desert biome
+  if (Math.random() < 0.7) {
+    const cx = rand(cols);
+    const cy = rand(rows);
+    blob(cx, cy, rand(12, 20), 'sand', ['grass']);
+    blob(cx, cy, rand(5, 10), 'cactus', ['sand']);
+  }
+
+  // Forests
+  for (let i = 0; i < 5; i++) {
+    blob(rand(cols), rand(rows), rand(8, 15), 'tree', ['grass']);
+  }
+
+  // Caves
+  if (Math.random() < 0.25) {
+    blob(rand(cols), rand(rows), rand(6, 10), 'cave', ['grass']);
+  }
+
+  // Tall grass
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      if (world[y][x] === 'grass' && Math.random() < 0.15) {
+        world[y][x] = 'tallgrass';
+      }
+    }
+  }
+
+  saveWorld();
+}
+
+/* =========================
+   SAVE / LOAD
+========================= */
+function saveWorld() {
+  localStorage.setItem('sandboxWorld', JSON.stringify(world));
+}
+
+function loadWorldFromStorage() {
+  const saved = localStorage.getItem('sandboxWorld');
+  if (saved) {
+    world = JSON.parse(saved);
+    return true;
+  }
+  return false;
+}
+
+function resetWorld() {
+  localStorage.removeItem('sandboxWorld');
+  generateWorld();
+}
+
+function clearWorld() {
+  world = Array.from({ length: rows }, () =>
+    Array(cols).fill('#ffffff')
+  );
+  saveWorld();
+}
+
+/* =========================
+   INIT
+========================= */
+if (!loadWorldFromStorage()) {
+  generateWorld();
+}
+</script>
