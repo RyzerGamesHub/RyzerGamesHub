@@ -1,5 +1,4 @@
-
-html_content = '''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1298,4 +1297,4 @@ requestAnimationFrame(gameLoop);
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 </script>
 </body>
-</html>'''
+</html>
