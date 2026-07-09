@@ -14,7 +14,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        body {
+body {
             background: #1a1a2e;
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -25,7 +25,7 @@
             align-items: center;
         }
 
-        #gameContainer {
+#gameContainer {
             position: relative;
             width: 100%;
             height: 100%;
@@ -34,13 +34,13 @@
             align-items: center;
         }
 
-        #gameCanvas {
+#gameCanvas {
             display: block;
             image-rendering: pixelated;
             image-rendering: crisp-edges;
         }
 
-        #minimapContainer {
+#minimapContainer {
             position: fixed;
             top: 55px;
             right: 10px;
@@ -53,13 +53,13 @@
             overflow: hidden;
         }
 
-        #minimapCanvas {
+#minimapCanvas {
             width: 100%;
             height: 100%;
             image-rendering: pixelated;
         }
 
-        #mainMenu {
+#mainMenu {
             position: fixed;
             top: 0;
             left: 0;
@@ -74,7 +74,7 @@
             gap: 15px;
         }
 
-        #mainMenu h1 {
+#mainMenu h1 {
             font-size: 48px;
             color: #e94560;
             text-shadow: 3px 3px 0 #533483;
@@ -82,7 +82,7 @@
             letter-spacing: 2px;
         }
 
-        .menu-btn {
+.menu-btn {
             padding: 15px 40px;
             font-size: 20px;
             border: none;
@@ -93,39 +93,39 @@
             min-width: 280px;
         }
 
-        .menu-btn:hover {
+.menu-btn:hover {
             transform: scale(1.05);
         }
 
-        .btn-primary {
+.btn-primary {
             background: #e94560;
             color: white;
         }
 
-        .btn-primary:hover {
+.btn-primary:hover {
             background: #ff6b6b;
         }
 
-        .btn-secondary {
+.btn-secondary {
             background: #533483;
             color: white;
         }
 
-        .btn-secondary:hover {
+.btn-secondary:hover {
             background: #7b68ee;
         }
 
-        .btn-tertiary {
+.btn-tertiary {
             background: #0f3460;
             color: #a0d2eb;
             border: 2px solid #533483;
         }
 
-        .btn-tertiary:hover {
+.btn-tertiary:hover {
             background: #1a4a7a;
         }
 
-        #hud {
+#hud {
             position: fixed;
             top: 0;
             left: 0;
@@ -135,11 +135,11 @@
             z-index: 50;
         }
 
-        #hud > * {
+#hud > * {
             pointer-events: auto;
         }
 
-        #topBar {
+#topBar {
             position: fixed;
             top: 0;
             left: 0;
@@ -153,7 +153,7 @@
             z-index: 100;
         }
 
-        #topBarLeft {
+#topBarLeft {
             display: flex;
             gap: 10px;
             align-items: center;
