@@ -1299,11 +1299,3 @@ canvas.addEventListener('contextmenu', e => e.preventDefault());
 </script>
 </body>
 </html>'''
-
-# Save the file
-output_path = '/mnt/agents/output/pixel_sandbox_deluxe.html'
-with open(output_path, 'w', encoding='utf-8') as f:
-    f.write(html_content)
-
-print(f"File saved successfully to: {output_path}")
-print(f"File size: {len(html_content):,} characters")
