@@ -159,7 +159,7 @@ body {
             align-items: center;
         }
 
-        .hud-btn {
+.hud-btn {
             padding: 8px 16px;
             background: #533483;
             color: white;
@@ -170,21 +170,21 @@ body {
             font-weight: bold;
         }
 
-        .hud-btn:hover {
+.hud-btn:hover {
             background: #7b68ee;
         }
 
-        .hud-btn.active {
+.hud-btn.active {
             background: #e94560;
         }
 
-        #topBarRight {
+#topBarRight {
             display: flex;
             gap: 10px;
             align-items: center;
         }
 
-        #inventoryBar {
+#inventoryBar {
             position: fixed;
             bottom: 10px;
             left: 50%;
@@ -197,7 +197,7 @@ body {
             z-index: 100;
         }
 
-        .inv-slot {
+.inv-slot {
             width: 55px;
             height: 55px;
             background: rgba(255, 255, 255, 0.1);
@@ -211,19 +211,19 @@ body {
             position: relative;
         }
 
-        .inv-slot.selected {
+.inv-slot.selected {
             border-color: #e94560;
             box-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
         }
 
-        .inv-slot .tile-preview {
+.inv-slot .tile-preview {
             width: 30px;
             height: 30px;
             image-rendering: pixelated;
             border-radius: 3px;
         }
 
-        .inv-slot .slot-count {
+.inv-slot .slot-count {
             position: absolute;
             bottom: 2px;
             right: 4px;
@@ -233,7 +233,7 @@ body {
             text-shadow: 1px 1px 0 black;
         }
 
-        .inv-slot .slot-key {
+.inv-slot .slot-key {
             position: absolute;
             top: 2px;
             left: 4px;
@@ -241,7 +241,7 @@ body {
             color: #aaa;
         }
 
-        #colorMenu {
+#colorMenu {
             position: fixed;
             top: 50%;
             left: 50%;
@@ -258,19 +258,19 @@ body {
             padding: 20px;
         }
 
-        #colorMenuHeader {
+#colorMenuHeader {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
         }
 
-        #colorMenuHeader h2 {
+#colorMenuHeader h2 {
             color: #e94560;
             font-size: 24px;
         }
 
-        .close-btn {
+.close-btn {
             background: #e94560;
             color: white;
             border: none;
@@ -282,14 +282,14 @@ body {
             font-weight: bold;
         }
 
-        #colorCategories {
+#colorCategories {
             display: flex;
             gap: 8px;
             margin-bottom: 15px;
             flex-wrap: wrap;
         }
 
-        .color-cat-btn {
+.color-cat-btn {
             padding: 8px 16px;
             background: #533483;
             color: white;
@@ -299,11 +299,11 @@ body {
             font-size: 13px;
         }
 
-        .color-cat-btn.active {
+.color-cat-btn.active {
             background: #e94560;
         }
 
-        #colorGrid {
+#colorGrid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
             gap: 5px;
@@ -314,7 +314,7 @@ body {
             border-radius: 10px;
         }
 
-        .color-swatch {
+.color-swatch {
             width: 38px;
             height: 38px;
             border-radius: 6px;
@@ -323,18 +323,18 @@ body {
             transition: transform 0.1s;
         }
 
-        .color-swatch:hover {
+.color-swatch:hover {
             transform: scale(1.2);
             border-color: white;
             z-index: 10;
         }
 
-        .color-swatch.selected {
+.color-swatch.selected {
             border-color: #e94560;
             box-shadow: 0 0 8px #e94560;
         }
 
-        #settingsMenu {
+ #settingsMenu {
             position: fixed;
             top: 50%;
             left: 50%;
@@ -350,14 +350,14 @@ body {
             padding: 20px;
         }
 
-        #settingsMenu h2 {
+#settingsMenu h2 {
             color: #e94560;
             font-size: 24px;
             margin-bottom: 20px;
             text-align: center;
         }
 
-        .setting-row {
+.setting-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -365,12 +365,12 @@ body {
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .setting-row label {
+.setting-row label {
             color: #a0d2eb;
             font-size: 16px;
         }
 
-        .toggle-switch {
+.toggle-switch {
             width: 50px;
             height: 26px;
             background: #4a4a6a;
@@ -380,11 +380,11 @@ body {
             transition: background 0.3s;
         }
 
-        .toggle-switch.active {
+.toggle-switch.active {
             background: #e94560;
         }
 
-        .toggle-switch::after {
+.toggle-switch::after {
             content: '';
             position: absolute;
             width: 22px;
@@ -396,11 +396,11 @@ body {
             transition: left 0.3s;
         }
 
-        .toggle-switch.active::after {
+.toggle-switch.active::after {
             left: 26px;
         }
 
-        #mobileControls {
+#mobileControls {
             position: fixed;
             bottom: 80px;
             left: 20px;
@@ -408,13 +408,13 @@ body {
             display: none;
         }
 
-        .d-pad {
+.d-pad {
             position: relative;
             width: 150px;
             height: 150px;
         }
 
-        .d-btn {
+.d-btn {
             position: absolute;
             width: 50px;
             height: 50px;
@@ -429,16 +429,16 @@ body {
             font-weight: bold;
         }
 
-        .d-btn:active {
+.d-btn:active {
             background: rgba(233, 69, 96, 0.5);
         }
 
-        .d-up { top: 0; left: 50px; }
+.d-up { top: 0; left: 50px; }
         .d-down { bottom: 0; left: 50px; }
         .d-left { top: 50px; left: 0; }
         .d-right { top: 50px; right: 0; }
 
-        #mobileActions {
+ #mobileActions {
             position: fixed;
             bottom: 80px;
             right: 20px;
@@ -448,7 +448,7 @@ body {
             gap: 10px;
         }
 
-        .mobile-btn {
+ .mobile-btn {
             width: 60px;
             height: 60px;
             background: rgba(255, 255, 255, 0.2);
@@ -462,11 +462,11 @@ body {
             font-weight: bold;
         }
 
-        .mobile-btn:active {
+  .mobile-btn:active {
             background: rgba(233, 69, 96, 0.5);
         }
 
-        #notification {
+ #notification {
             position: fixed;
             top: 60px;
             left: 50%;
@@ -481,43 +481,43 @@ body {
             border: 1px solid #533483;
         }
 
-        #fileInput {
+ #fileInput {
             display: none;
         }
 
-        @media (max-width: 768px) {
+@media (max-width: 768px) {
             #mobileControls, #mobileActions {
                 display: flex;
             }
             
-            #inventoryBar {
+   #inventoryBar {
                 bottom: 5px;
                 padding: 5px;
             }
             
-            .inv-slot {
+  .inv-slot {
                 width: 42px;
                 height: 42px;
             }
             
-            .inv-slot .tile-preview {
+ .inv-slot .tile-preview {
                 width: 24px;
                 height: 24px;
             }
             
-            #minimapContainer {
+ #minimapContainer {
                 width: 100px;
                 height: 100px;
                 top: 55px;
             }
             
-            .hud-btn {
+ .hud-btn {
                 padding: 6px 10px;
                 font-size: 12px;
             }
         }
 
-        .tooltip {
+ .tooltip {
             position: fixed;
             background: rgba(0, 0, 0, 0.9);
             color: white;
@@ -530,7 +530,7 @@ body {
             border: 1px solid #533483;
         }
 
-        #brushSizeIndicator {
+   #brushSizeIndicator {
             position: fixed;
             bottom: 75px;
             left: 50%;
@@ -543,8 +543,7 @@ body {
             z-index: 100;
             display: none;
         }
-
-        #caveOverlay {
+     #caveOverlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -562,11 +561,11 @@ body {
         <canvas id="gameCanvas"></canvas>
     </div>
 
-    <div id="minimapContainer">
+  <div id="minimapContainer">
         <canvas id="minimapCanvas"></canvas>
     </div>
 
-    <div id="mainMenu">
+   <div id="mainMenu">
         <h1>Pixel Sandbox Deluxe</h1>
         <button class="menu-btn btn-primary" onclick="startGame('world')">Explore World</button>
         <button class="menu-btn btn-secondary" onclick="startGame('canvas')">Blank Canvas</button>
@@ -574,7 +573,7 @@ body {
         <input type="file" id="fileInput" accept=".json" onchange="handleFileLoad(event)">
     </div>
 
-    <div id="hud" style="display: none;">
+ <div id="hud" style="display: none;">
         <div id="topBar">
             <div id="topBarLeft">
                 <button class="hud-btn" onclick="toggleMenu()">Menu</button>
@@ -589,9 +588,9 @@ body {
         </div>
     </div>
 
-    <div id="inventoryBar" style="display: none;"></div>
+   <div id="inventoryBar" style="display: none;"></div>
 
-    <div id="colorMenu">
+   <div id="colorMenu">
         <div id="colorMenuHeader">
             <h2>Color Palette</h2>
             <button class="close-btn" onclick="toggleColorMenu()">X</button>
@@ -600,7 +599,7 @@ body {
         <div id="colorGrid"></div>
     </div>
 
-    <div id="settingsMenu">
+   <div id="settingsMenu">
         <h2>Settings</h2>
         <div class="setting-row">
             <label>Day/Night Cycle</label>
@@ -623,7 +622,7 @@ body {
         </div>
     </div>
 
-    <div id="mobileControls">
+ <div id="mobileControls">
         <div class="d-pad">
             <div class="d-btn d-up" ontouchstart="mobileMove('up')" ontouchend="mobileStop()">W</div>
             <div class="d-btn d-down" ontouchstart="mobileMove('down')" ontouchend="mobileStop()">S</div>
@@ -632,18 +631,18 @@ body {
         </div>
     </div>
 
-    <div id="mobileActions">
+  <div id="mobileActions">
         <div class="mobile-btn" ontouchstart="mobileAction('place')">Place</div>
         <div class="mobile-btn" ontouchstart="mobileAction('break')">Break</div>
         <div class="mobile-btn" ontouchstart="mobileAction('interact')">Use</div>
     </div>
 
-    <div id="notification"></div>
+  <div id="notification"></div>
     <div id="brushSizeIndicator">Brush: 1x1</div>
     <div class="tooltip" id="tooltip"></div>
     <div id="caveOverlay"></div>
 
-    <script>
+   <script>
 
         const TILE_SIZE = 32;
         const WORLD_WIDTH = 200;
@@ -2362,11 +2361,3 @@ body {
 
 </body>
 </html>
-'''
-
-with open('/mnt/agents/output/pixel_sandbox_deluxe.html', 'a') as f:
-    f.write(part5)
-
-print("Part 5 written successfully - Game complete!")
-
-
