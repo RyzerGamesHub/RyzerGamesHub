@@ -1,8 +1,4 @@
-
-# Let me write the complete game to a file since it's very long
-# I'll create it in parts
-
-part1 = '''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -648,16 +644,7 @@ part1 = '''<!DOCTYPE html>
     <div id="caveOverlay"></div>
 
     <script>
-'''
 
-with open('/mnt/agents/output/pixel_sandbox_deluxe.html', 'w') as f:
-    f.write(part1)
-
-print("Part 1 written successfully")
-
-
-part2 = '''
-        // ==================== GAME CONSTANTS ====================
         const TILE_SIZE = 32;
         const WORLD_WIDTH = 200;
         const WORLD_HEIGHT = 150;
@@ -1071,16 +1058,7 @@ part2 = '''
             minimapCanvas.width = 150;
             minimapCanvas.height = 150;
         }
-'''
 
-with open('/mnt/agents/output/pixel_sandbox_deluxe.html', 'a') as f:
-    f.write(part2)
-
-print("Part 2 written successfully")
-
-
-part3 = '''
-        // ==================== WORLD GENERATION ====================
         function generateWorld(type) {
             worldType = type;
             isCave = false;
@@ -1599,16 +1577,7 @@ part3 = '''
                 });
             }
         }
-'''
 
-with open('/mnt/agents/output/pixel_sandbox_deluxe.html', 'a') as f:
-    f.write(part3)
-
-print("Part 3 written successfully")
-
-
-part4 = '''
-        // ==================== COLOR MENU ====================
         function buildColorMenu() {
             const catContainer = document.getElementById('colorCategories');
             const grid = document.getElementById('colorGrid');
@@ -1985,16 +1954,7 @@ part4 = '''
                 if (p.life <= 0) particles.splice(i, 1);
             }
         }
-'''
 
-with open('/mnt/agents/output/pixel_sandbox_deluxe.html', 'a') as f:
-    f.write(part4)
-
-print("Part 4 written successfully")
-
-
-part5 = '''
-        // ==================== RENDERING ====================
         function render() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
@@ -2399,6 +2359,7 @@ part5 = '''
         // ==================== START ====================
         window.onload = init;
     </script>
+
 </body>
 </html>
 '''
